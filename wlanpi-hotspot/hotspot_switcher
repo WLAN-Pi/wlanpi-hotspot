@@ -52,8 +52,8 @@ hotspot_on () {
   cp /etc/default/ufw /etc/default/ufw.hspt
   cp /etc/ufw/before.rules /etc/ufw/before.rules.hspt
   # This file may or may not exist
-  if [ -e /etc/hostapd.conf ]; then
-    cp /etc/hostapd.conf /etc/hostapd.conf.hspt
+  if [ -e /etc/hostapd/hostapd.conf ]; then
+    cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.hspt
   fi
   # Remove existing config files
   echo "Removing existing config files..."
@@ -64,18 +64,21 @@ hotspot_on () {
   rm /etc/default/ufw
   rm /etc/ufw/before.rules
   # This file may or may not exist
-  if [ -e /etc/hostapd.conf ]; then
-    rm /etc/hostapd.conf
+  if [ -e /etc/hostapd/hostapd.conf ]; then
+    rm /etc/hostapd/hostapd.conf
   fi
   # Link to hotspot config files
   echo "Creaing links to config files..."
   ln -s /etc/wlanpi-hotspot/default/isc-dhcp-server /etc/default/isc-dhcp-server 
   ln -s /etc/wlanpi-hotspot/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf
   ln -s /etc/wlanpi-hotspot/network/interfaces /etc/network/interfaces
-  ln -s /etc/wlanpi-hotspot/conf/hostapd.conf /etc/hostapd.conf
+  ln -s /etc/wlanpi-hotspot/conf/hostapd.conf /etc/hostapd/hostapd.conf
   ln -s /etc/wlanpi-hotspot/sysctl/sysctl.conf /etc/sysctl.conf
   ln -s /etc/wlanpi-hotspot/default/ufw /etc/default/ufw
   ln -s /etc/wlanpi-hotspot/ufw/before.rules /etc/ufw/before.rules
+
+  # enable hostapd service to start after reboot
+  systemctl enable hostapd
 
   # Signal that hotspot active
   echo "hotspot" > $STATUS_FILE
@@ -114,7 +117,7 @@ hotspot_off () {
   unlink /etc/default/isc-dhcp-server
   unlink /etc/dhcp/dhcpd.conf
   unlink /etc/network/interfaces
-  unlink /etc/hostapd.conf
+  unlink /etc/hostapd/hostapd.conf
   unlink /etc/sysctl.conf
   unlink /etc/default/ufw
   unlink /etc/ufw/before.rules
@@ -127,10 +130,14 @@ hotspot_off () {
   cp /etc/sysctl.conf.hspt /etc/sysctl.conf
   cp /etc/default/ufw.hspt /etc/default/ufw
   cp /etc/ufw/before.rules.hspt /etc/ufw/before.rules
+
   # This file may or may not exist
-  if [ -e /etc/hostapd.conf.hspt ]; then
-    cp /etc/hostapd.conf.hspt /etc/hostapd.conf
+  if [ -e /etc/hostapd/hostapd.conf.hspt ]; then
+    cp /etc/hostapd/hostapd.conf.hspt /etc/hostapd/hostapd.conf
   fi
+
+  # disable hostapd service (no start after reboot)
+  systemctl disable hostapd
 
   echo "WLANPi will now reboot"
   echo "classic" > $STATUS_FILE
