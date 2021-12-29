@@ -17,21 +17,34 @@ set -e
 SSID=""
 PSK=""
 CHANNEL=
-INTERACE="wlan0"
 CONFIG_FILE=/etc/wlanpi-hotspot/conf/hostapd.conf
+DHCP_FILE=/etc/wlanpi-hotspot/dhcp/dhcpd.conf
+ISC_DHCP_FILE=/etc/wlanpi-hotspot/default/isc-dhcp-server
+INTERFACES_FILE=/etc/wlanpi-hotspot/network/interfaces
+
 STATUS_FILE="/etc/wlanpi-state"
 
 # default values
+INTERFACE_DEFAULT=wlan0
 SSID_DEFAULT=wlanpi_hotspot
 KEY_DEFAULT=wifipros
 COUNTRYCODE_DEFAULT=US
 CHANNEL_DEFAULT=6
 
 # global vars
+INTERFACE=
 SSID=
 KEY=
 COUNTRYCODE=
 CHANNEL=
+
+get_interface () {
+    read -p "Please enter the network interface name to be used for the wireless connection [$INTERFACE_DEFAULT] : " INTERFACE
+    if [ "$INTERFACE" == "" ]; then 
+        SSID=$INTERFACE_DEFAULT;
+    fi
+    return
+}
 
 get_ssid () {
     read -p "Please enter the network name of the wireless connection [$SSID_DEFAULT] : " SSID
@@ -95,11 +108,11 @@ FAIL
 This script will configure the wireless details for 
 the WLAN Pi hotspot feature.
 
-You will need to provide a network name, shared key
-and channel number. The network name will be the 
-name advertised when you flip in to hotspot mode.
-The key will be used to secure the wireless
-connection.
+You will need to provide a wireless network interface
+name, network name (SSID), shared key and channel 
+number. The network name will be the name advertised 
+when you flip in to hotspot mode. The key will be used
+to secure the wireless connection.
 
 You will also need to provide a two letter country 
 code for your geographic region to ensure compliance 
@@ -140,6 +153,7 @@ be used if no value is entered)
 ##################################################### 
 SEC
 
+    get_interface
     get_ssid
     get_psk
     get_country
@@ -147,10 +161,23 @@ SEC
     
     echo "Writing supplied configuration values..."
 
+    # hostapd configs
+    sed -i "s/^interface=wlan.*/interface=$INTERFACE/" $CONFIG_FILE
     sed -i "s/^ssid=.*$/ssid=$SSID/" $CONFIG_FILE
     sed -i "s/^wpa_passphrase=.*$/wpa_passphrase=$KEY/" $CONFIG_FILE
     sed -i "s/^country_code=.*$/country_code=$COUNTRYCODE/" $CONFIG_FILE
     sed -i "s/^channel=.*$/channel=$CHANNEL/" $CONFIG_FILE
+
+    # dhcpd config
+    sed -i "s/^interface wlan.*$/interface $INTERFACE;/" $DHCP_FILE
+
+    # isc-dhcp-server config
+    sed -i "s/^INTERFACESv4=.*$/INTERFACESv4=\"usb0 $INTERFACE\"/" $ISC_DHCP_FILE
+
+    # interfaces config file
+    sed -i "s/^iface wlan.*$/iface $INTERFACE inet static/" $INTERFACES_FILE
+    sed -i "s/^allow-hotplug wlan.*$/allow-hotplug $INTERFACE/" $INTERFACES_FILE
+    
     echo "Wireless link configured."
     sleep 1
 
