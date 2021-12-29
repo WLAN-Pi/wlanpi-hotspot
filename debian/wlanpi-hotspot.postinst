@@ -1,0 +1,14 @@
+#!/bin/sh
+#
+# "wlanpi-hotspot" postinst script
+#
+
+# hostapd is installed with service masked, need to umask 
+systemctl unmask hostapd
+
+# stop & disable hostapd after installed
+# as not needed until we flip modes
+systemctl stop hostapd
+systemctl disable hostapd
+
+exit 0

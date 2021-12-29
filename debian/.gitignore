@@ -1,0 +1,8 @@
+wlanpi-hotspot.*.debhelper
+wlanpi-hotspot.substvars
+wlanpi-hotspot/
+wlanpi-hotspot-*/
+debhelper*
+.debhelper
+files
+*.log

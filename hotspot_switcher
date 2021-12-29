@@ -1,0 +1,184 @@
+#! /bin/bash
+#
+# hotspot_switcher       script to switch hotspot on/off
+
+NAME=hotspot_switcher
+DESC="Script to switch hotspot on/off"
+STATUS_FILE="/etc/wlanpi-state"
+
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root" 
+   exit 1
+fi
+
+###############################################################################
+#
+# Activate hotspot:
+#
+# 1. Backup various existing files to allow restoration when hotspot
+#    deactivated
+# 2. Remove a number of existing files that need to be replaced
+# 3. Create links from deleted file locations to hotspot config files
+# 4. Create status file to indicate hotspot is active
+# 5. Reboot the wlanpi to ensure clean activation
+#
+###############################################################################
+hotspot_on () {
+
+  echo "Starting switch from classic mode to hostpot mode"
+
+  # check what state the WLAN Pi is in classic mode
+  PI_STATUS=`cat $STATUS_FILE | grep 'classic'` || true
+  if  [ -z "$PI_STATUS" ]; then
+     echo "Failed - WLAN Pi is not in classic mode."
+     exit 1
+  fi
+
+  # check if the WLAN NIC supports AP mode before switching
+  # iw list | awk '/Supported interface modes/, /Band/' | grep '\* AP'
+   AP_SUPPORT=`iw list | awk '/Supported interface modes/, /Band/' | grep '\* AP'` || true
+   if  [ -z "$AP_SUPPORT" ]; then
+     echo "Failed - AP Mode not supported by adapter."
+     exit 1
+  fi
+  
+  echo "Enabling hotspot..."
+  #Backup existing config files
+  echo "Backing up existing config files..."
+  cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.hspt
+  cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.hspt
+  cp /etc/network/interfaces /etc/network/interfaces.hspt
+  cp /etc/sysctl.conf /etc/sysctl.conf.hspt
+  cp /etc/default/ufw /etc/default/ufw.hspt
+  cp /etc/ufw/before.rules /etc/ufw/before.rules.hspt
+  # This file may or may not exist
+  if [ -e /etc/hostapd.conf ]; then
+    cp /etc/hostapd.conf /etc/hostapd.conf.hspt
+  fi
+  # Remove existing config files
+  echo "Removing existing config files..."
+  rm /etc/default/isc-dhcp-server
+  rm /etc/dhcp/dhcpd.conf
+  rm /etc/network/interfaces
+  rm /etc/sysctl.conf
+  rm /etc/default/ufw
+  rm /etc/ufw/before.rules
+  # This file may or may not exist
+  if [ -e /etc/hostapd.conf ]; then
+    rm /etc/hostapd.conf
+  fi
+  # Link to hotspot config files
+  echo "Creaing links to config files..."
+  ln -s /etc/wlanpi-hotspot/default/isc-dhcp-server /etc/default/isc-dhcp-server 
+  ln -s /etc/wlanpi-hotspot/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf
+  ln -s /etc/wlanpi-hotspot/network/interfaces /etc/network/interfaces
+  ln -s /etc/wlanpi-hotspot/conf/hostapd.conf /etc/hostapd.conf
+  ln -s /etc/wlanpi-hotspot/sysctl/sysctl.conf /etc/sysctl.conf
+  ln -s /etc/wlanpi-hotspot/default/ufw /etc/default/ufw
+  ln -s /etc/wlanpi-hotspot/ufw/before.rules /etc/ufw/before.rules
+
+  # Signal that hotspot active
+  echo "hotspot" > $STATUS_FILE
+  echo "WLANPi will now reboot"
+  sleep 1
+  sync
+  reboot
+
+  
+}
+
+###############################################################################
+#
+# Deactivate hotspot:
+#
+# 1. Remove links created during activation
+# 2. Restore config files backed up during activation
+# 3. Remove firewall rules added during activation
+# 4. Remove status file to indicate hotspot no longer active
+# 5. Reboot wlanpi to provide clean restoration of services
+#
+###############################################################################
+hotspot_off () {
+
+  # check what state the WLAN Pi is in
+  PI_STATUS=`cat $STATUS_FILE | grep 'hotspot'` || true
+  if  [ -z "$PI_STATUS" ]; then
+     echo "Failed - WLAN Pi is not in hotspot mode."
+     exit 1
+  fi
+
+  echo "Starting switch from hotspot mode to classic mode"
+
+  # Remove links to config files
+  echo "Removing links to config files..."
+  unlink /etc/default/isc-dhcp-server
+  unlink /etc/dhcp/dhcpd.conf
+  unlink /etc/network/interfaces
+  unlink /etc/hostapd.conf
+  unlink /etc/sysctl.conf
+  unlink /etc/default/ufw
+  unlink /etc/ufw/before.rules
+
+  # Restore original config files
+  echo "Restoring original config files..."
+  cp /etc/default/isc-dhcp-server.hspt /etc/default/isc-dhcp-server
+  cp /etc/dhcp/dhcpd.conf.hspt /etc/dhcp/dhcpd.conf
+  cp /etc/network/interfaces.hspt /etc/network/interfaces
+  cp /etc/sysctl.conf.hspt /etc/sysctl.conf
+  cp /etc/default/ufw.hspt /etc/default/ufw
+  cp /etc/ufw/before.rules.hspt /etc/ufw/before.rules
+  # This file may or may not exist
+  if [ -e /etc/hostapd.conf.hspt ]; then
+    cp /etc/hostapd.conf.hspt /etc/hostapd.conf
+  fi
+
+  echo "WLANPi will now reboot"
+  echo "classic" > $STATUS_FILE
+  sleep 1
+  sync
+  reboot
+}
+
+status () {
+  PI_STATUS=`cat $STATUS_FILE | grep 'hotspot'` || true
+  if  [ -z "$PI_STATUS" ]; then
+    echo "hotspot is currently disabled"
+    exit 0
+  else
+    echo "hotpot is currently enabled"
+    exit 0
+  fi
+
+}
+
+version () {
+    N=/etc/wlanpi-hotspot/$NAME
+        echo "Version: $N $VERSION" >&2
+        exit 1
+
+}
+
+case "$1" in
+  on)
+        hotspot_on
+        ;;
+  off)
+        hotspot_off
+        ;;
+  status)
+        status
+        ;;
+  install)
+        install
+        ;;
+  version)
+        version;;
+  *)
+        N=/etc/wlanpi-hotspot/$NAME
+        echo "Usage: $N {on|off|status|version}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
+
