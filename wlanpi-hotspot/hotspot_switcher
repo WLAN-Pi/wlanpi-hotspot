@@ -77,9 +77,6 @@ hotspot_on () {
   ln -s /etc/wlanpi-hotspot/default/ufw /etc/default/ufw
   ln -s /etc/wlanpi-hotspot/ufw/before.rules /etc/ufw/before.rules
 
-  # enable hostapd service to start after reboot
-  systemctl enable hostapd
-
   # Signal that hotspot active
   echo "hotspot" > $STATUS_FILE
   echo "WLANPi will now reboot"
@@ -135,9 +132,6 @@ hotspot_off () {
   if [ -e /etc/hostapd/hostapd.conf.hspt ]; then
     cp /etc/hostapd/hostapd.conf.hspt /etc/hostapd/hostapd.conf
   fi
-
-  # disable hostapd service (no start after reboot)
-  systemctl disable hostapd
 
   echo "WLANPi will now reboot"
   echo "classic" > $STATUS_FILE
