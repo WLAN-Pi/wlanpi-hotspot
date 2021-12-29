@@ -1,3 +1,9 @@
+wlanpi-hotspot (1.0.1+nmu2) unstable; urgency=medium
+
+  * Add hostapd to depends 
+
+ -- Josh Schmelzle <josh@joshschmelzle.com>  Wed, 29 Dec 2021 16:30:35 -0500
+
 wlanpi-hotspot (1.0.1+nmu1) unstable; urgency=medium
 
   * Fix install

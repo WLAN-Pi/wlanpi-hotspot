@@ -9,6 +9,8 @@ Homepage: https://github.com/WLAN-Pi/wlanpi-hotspot
 Package: wlanpi-hotspot
 Architecture: any
 Multi-Arch: foreign
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+         hostapd
 Description: WLAN Pi simple hotspot
  WLAN Pi simple hotspot.
