@@ -1,2 +1,2 @@
-wlanpi-hotspot/etc/* /etc/wlanpi-hotspot/
-wlanpi-hotspot/* opt/wlanpi-hotspot/
+/install/etc/wlanpi-hotspot /etc
+/wlanpi-hotspot /opt

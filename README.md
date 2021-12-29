@@ -1,4 +1,5 @@
 # WLANPi Hotspot
+
 WLAN Pi Hotspot mode for the RPi/CM4 based platforms
 
 (__Note: In this initial version, only 2.4GHz operation is supported due to platform support issues - this is under investigation__)
@@ -71,7 +72,7 @@ When moving between modes, the WLANPi will reboot to ensure that all new network
 To flip the WLANPi in to "Hotspot" mode, SSH to the WLANPi and execute the following command:
 
 ```
- sudo /etc/wlanpi-hotspot/hotspot_switcher on
+ sudo hotspot_switcher on
 ```
 
 At this point, the WLANPi will reboot so that the new networking configuration will take effect. 
@@ -82,7 +83,7 @@ At this point, the WLANPi will reboot so that the new networking configuration w
 To switch out of "Hotspot" mode, SSH to the WLANPi using network address 192.168.88.1 and run the command: 
 
 ```
- sudo /etc/wlanpi-hotspot/hotspot_switcher off
+ sudo hotspot_switcher off
 ```
 
 When this command is executed, the original ("classic" mode) networking configuration files will be restored and the WLANPi will reboot. After the reboot, the WLANPi will operate as it did before the switch to "Hotspot" mode.
