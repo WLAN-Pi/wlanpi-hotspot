@@ -68,7 +68,7 @@ hotspot_on () {
     rm /etc/hostapd/hostapd.conf
   fi
   # Link to hotspot config files
-  echo "Creaing links to config files..."
+  echo "Creating links to config files..."
   ln -s /etc/wlanpi-hotspot/default/isc-dhcp-server /etc/default/isc-dhcp-server 
   ln -s /etc/wlanpi-hotspot/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf
   ln -s /etc/wlanpi-hotspot/network/interfaces /etc/network/interfaces
