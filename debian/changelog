@@ -1,3 +1,9 @@
+wlanpi-hotspot (1.0.2) UNRELEASED; urgency=medium
+
+  * Remove references to usb0 as no longer required
+
+ -- Nigel Bowden <wifinigel@gmail.com>  Sat, 01 Jan 2022 16:09:39 +0000
+
 wlanpi-hotspot (1.0.1+nmu2) unstable; urgency=medium
 
   * Add hostapd to depends 

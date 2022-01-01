@@ -172,7 +172,7 @@ SEC
     sed -i "s/^interface wlan.*$/interface $INTERFACE;/" $DHCP_FILE
 
     # isc-dhcp-server config
-    sed -i "s/^INTERFACESv4=.*$/INTERFACESv4=\"usb0 $INTERFACE\"/" $ISC_DHCP_FILE
+    sed -i "s/^INTERFACESv4=.*$/INTERFACESv4=\"$INTERFACE\"/" $ISC_DHCP_FILE
 
     # interfaces config file
     sed -i "s/^iface wlan.*$/iface $INTERFACE inet static/" $INTERFACES_FILE
