@@ -133,7 +133,7 @@ run_tests () {
   check_not `iwconfig wlan0 | grep 'Mode:Master'`
 
   # check wlan0 no longer running with default IP
-  wlan0_ip=192.168.88.1
+  wlan0_ip=172.16.43.1
   info "Checking wlan0 no longer using defaut IP (${wlan0_ip})"
   check_not `ifconfig wlan0 | grep $wlan0_ip`
 
@@ -143,7 +143,7 @@ run_tests () {
 
   # check NAT not enabled - check for line from NAT config
   info "Checking firewall NAT not enabled"
-  check_not `cat /etc/ufw/before.rules | grep 'POSTROUTING -s 192.168.88.0/24 -o eth0 -j MASQUERADE'`
+  check_not `cat /etc/ufw/before.rules | grep 'POSTROUTING -s 172.16.43.0/24 -o eth0 -j MASQUERADE'`
 
   # Print test run results summary
   summary

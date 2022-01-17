@@ -55,7 +55,7 @@ If you need to make any subsequent alterations to the parameters configured in h
 
 Following the WLANPi reboot, your configured hotspot SSID should be available in the network list shown on your wireless client (e.g. laptop).
 
-Once you have joined the SSID, an IP address is assigned to your client device via DHCP and you will have access to the WLAN Pi itself (e.g. SSH to 192.168.88.1). You will be able to access features such as the built-in speedtest utility using a browser pointed at : http://192.168.88.1/
+Once you have joined the SSID, an IP address is assigned to your client device via DHCP and you will have access to the WLAN Pi itself (e.g. SSH to 172.16.43.1). You will be able to access features such as the built-in speedtest utility using a browser pointed at : http://172.16.43.1/
 
 If the Ethernet port of the WLAN Pi is connected to a switch port that can provide an IP address to the WAN Pi, traffic can be forwarded (routed) from your wireless client and out to the Ethernet port. This can be useful to provide an extended network connection from an existing wired network.
 
@@ -80,7 +80,7 @@ At this point, the WLANPi will reboot so that the new networking configuration w
 
 ### Exiting Hotspot Mode (via CLI)
 
-To switch out of "Hotspot" mode, SSH to the WLANPi using network address 192.168.88.1 and run the command: 
+To switch out of "Hotspot" mode, SSH to the WLANPi using network address 172.16.43.1 and run the command: 
 
 ```
  sudo hotspot_switcher off
