@@ -85,7 +85,7 @@ Test rig description:
   3. WLAN Pi is switched in to hotspot mode
   4. hotspot config files are default
   5. Run tests by joining SSID 'wlanpi_hotspot' (key = 'wifipros' ) 
-  6. SSH to 192.168.88.1 and run this test script:
+  6. SSH to 172.16.43.1 and run this test script:
       /etc/wlanpi-hotspot/tests/hotspot_tests_01.sh
 
 =======================================================" | tee $LOG_FILE
@@ -148,7 +148,7 @@ run_tests () {
   check `iwconfig wlan0 | grep ESSID:\"${SSID}\"`
 
   # check wlan0 up and running with correct IP address
-  wlan0_ip=192.168.88.1
+  wlan0_ip=172.16.43.1
   info "Checking wlan0 has correct IP (${wlan0_ip})"
   check `ifconfig wlan0 | grep $wlan0_ip`
 
@@ -158,7 +158,7 @@ run_tests () {
 
   # check NAT enabled - check for line from NAT config
   info "Checking firewall NAT enabled"
-  check `cat /etc/ufw/before.rules | grep 'POSTROUTING -s 192.168.88.0/24 -o eth0 -j MASQUERADE'`
+  check `cat /etc/ufw/before.rules | grep 'POSTROUTING -s 172.16.43.0/24 -o eth0 -j MASQUERADE'`
 
   # Print test run results summary
   summary

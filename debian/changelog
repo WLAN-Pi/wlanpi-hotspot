@@ -1,3 +1,9 @@
+wlanpi-hotspot (1.0.3) UNRELEASED; urgency=medium
+
+  * Updated wlan0 to use new standard 172.16.43.0/24 network
+
+ -- Nigel Bowden <wifinigel@gmail.com>  Mon, 17 Jan 2022 20:49:11 +0000
+
 wlanpi-hotspot (1.0.2) UNRELEASED; urgency=medium
 
   * Remove references to usb0 as no longer required
