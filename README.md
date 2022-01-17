@@ -10,6 +10,17 @@ The WLAN Pi hotspot mode has been created to provide a quick and dirty wireless 
 
 **Background**: This package was created using the information in François Vergès blog article : [WLAN Pi - Setup a Wi-Fi Hotspot](https://www.semfionetworks.com/blog/wlan-pi-setup-a-wi-fi-hotspot)
 
+## Quickstart
+
+Although this document provides comprehensive instructions around the configuration and use of hotspot mode, you may want to quickly configure hostspot mode without reading lot of documentation. In the current release. we have provided a "quickstart" script to speed things up.
+
+With the WLAN Pi in classic mode, SSH to the WLAN Pi and execute the command:
+
+```
+sudo /opt/wlanpi-hotspot/extras/quickstart.sh
+```
+
+Follow the on-screen instructions to configure hotspot and switch in to hotspot mode. If you need a deeper dive in to hotspot, please see the instructiosn provided in the remainder of this document.
 
 ## Configurations Options
 
