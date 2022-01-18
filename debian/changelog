@@ -1,3 +1,10 @@
+wlanpi-hotspot (1.0.4) unstable; urgency=medium
+
+  * Enables BSS Load which advertises the number of connected clients
+  * Broadcasts country code in beacons
+
+ -- Jiri Brejcha <jirka@jiribrejcha.net>  Tue, 18 Jan 2022 20:27:04 +0000
+
 wlanpi-hotspot (1.0.3) UNRELEASED; urgency=medium
 
   * Updated wlan0 to use new standard 172.16.43.0/24 network
