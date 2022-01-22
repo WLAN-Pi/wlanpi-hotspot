@@ -11,6 +11,7 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+
 ###############################################################################
 #
 # Activate hotspot:
@@ -41,7 +42,22 @@ hotspot_on () {
      echo "Failed - AP Mode not supported by adapter."
      exit 1
   fi
-  
+
+  echo "Creating a unique SSID"
+  # Get the last 3 chars of eth0 MAC address
+    LAST_3_CHARS_MAC=$(sed s/://g /sys/class/net/eth0/address | grep -o '...$')
+  # Check if we got 3 chars
+    if [ ${#LAST_3_CHARS_MAC} -ne 3 ]; then
+      echo "Failed parsing eth0 MAC address during unique SSID creation"
+      exit 1
+    fi
+  # Configure the unique SSID
+  if grep -q -E "^?ssid=" /etc/wlanpi-hotspot/conf/hostapd.conf; then
+    sudo sed -i "s/^#\?ssid=.*/ssid=WLAN Pi $LAST_3_CHARS_MAC/" /etc/wlanpi-hotspot/conf/hostapd.conf
+  else
+    echo "ssid=WLAN Pi $LAST_3_CHARS_MAC" >> /etc/wlanpi-hotspot/conf/hostapd.conf
+  fi
+
   echo "Enabling hotspot..."
   #Backup existing config files
   echo "Backing up existing config files..."
@@ -133,7 +149,7 @@ hotspot_off () {
     cp /etc/hostapd/hostapd.conf.hspt /etc/hostapd/hostapd.conf
   fi
 
-  echo "WLANPi will now reboot"
+  echo "WLAN Pi will now reboot"
   echo "classic" > $STATUS_FILE
   sleep 1
   sync
