@@ -1,3 +1,9 @@
+wlanpi-hotspot (1.0.5) unstable; urgency=medium
+
+  * Generate unique SSID using the last 3 characters of eth0 MAC address
+
+ -- Jiri Brejcha <jirka@jiribrejcha.net>  Sat, 22 Jan 2022 02:09:00 +0000
+
 wlanpi-hotspot (1.0.4) unstable; urgency=medium
 
   * Enables BSS Load which advertises the number of connected clients
