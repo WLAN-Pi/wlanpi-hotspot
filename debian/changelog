@@ -1,3 +1,9 @@
+wlanpi-hotspot (1.0.7) unstable; urgency=medium
+
+  * Generate random WPA2 passphrase if the user has not configured their own
+
+ -- Jiri Brejcha <jirka@jiribrejcha.net>  Sun, 23 Jan 2022 23:55:00 +0000
+
 wlanpi-hotspot (1.0.6) UNRELEASED; urgency=medium
 
   * Add quickstart symlink for easier execution of script
