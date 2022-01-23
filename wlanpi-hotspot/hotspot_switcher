@@ -45,17 +45,24 @@ hotspot_on () {
 
   echo "Creating a unique SSID"
   # Get the last 3 chars of eth0 MAC address
-    LAST_3_CHARS_MAC=$(sed s/://g /sys/class/net/eth0/address | grep -o '...$')
+  LAST_3_CHARS_MAC=$(sed s/://g /sys/class/net/eth0/address | grep -o '...$')
   # Check if we got 3 chars
-    if [ ${#LAST_3_CHARS_MAC} -ne 3 ]; then
-      echo "Failed parsing eth0 MAC address during unique SSID creation"
-      exit 1
-    fi
+  if [ ${#LAST_3_CHARS_MAC} -ne 3 ]; then
+    echo "Failed parsing eth0 MAC address during unique SSID creation"
+    exit 1
+  fi
   # Configure the unique SSID
   if grep -q -E "^?ssid=" /etc/wlanpi-hotspot/conf/hostapd.conf; then
     sudo sed -i "s/^#\?ssid=.*/ssid=WLAN Pi $LAST_3_CHARS_MAC/" /etc/wlanpi-hotspot/conf/hostapd.conf
   else
     echo "ssid=WLAN Pi $LAST_3_CHARS_MAC" >> /etc/wlanpi-hotspot/conf/hostapd.conf
+  fi
+
+  echo "Generating a random WPA2 passphrase"
+  PASSPHRASE=$(tr -dc 'A-Za-z0-9!#$%*+.=?@_' </dev/urandom | head -c 12  ; echo)
+  # Only generate a random passphrase if the user has not configured their own one
+  if grep -q -E "^?wpa_passphrase=wifipros" /etc/wlanpi-hotspot/conf/hostapd.conf; then
+    sudo sed -i "s/^#\?wpa_passphrase=.*/wpa_passphrase=$PASSPHRASE/" /etc/wlanpi-hotspot/conf/hostapd.conf
   fi
 
   echo "Enabling hotspot..."
