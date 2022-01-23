@@ -1,1 +1,2 @@
 opt/wlanpi-hotspot/hotspot_switcher usr/sbin/hotspot_switcher
+opt/wlanpi-hotspot/extras/quickstart.sh usr/sbin/quickstart-hotspot

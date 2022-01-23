@@ -17,7 +17,7 @@ Although this document provides comprehensive instructions around the configurat
 With the WLAN Pi in classic mode, SSH to the WLAN Pi and execute the command:
 
 ```
-sudo /opt/wlanpi-hotspot/extras/quickstart.sh
+sudo quickstart-hotspot
 ```
 
 Follow the on-screen instructions to configure hotspot and switch in to hotspot mode. If you need a deeper dive in to hotspot, please see the instructiosn provided in the remainder of this document.

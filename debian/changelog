@@ -1,3 +1,9 @@
+wlanpi-hotspot (1.0.6) UNRELEASED; urgency=medium
+
+  * Add quickstart symlink for easier execution of script
+
+ -- Nigel Bowden <wifinigel@gmail.com>  Mon, 17 Jan 2022 20:49:11 +0000
+
 wlanpi-hotspot (1.0.5) unstable; urgency=medium
 
   * Generate unique SSID using the last 3 characters of eth0 MAC address
