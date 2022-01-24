@@ -59,7 +59,7 @@ hotspot_on () {
   fi
 
   echo "Generating a random WPA2 passphrase"
-  PASSPHRASE=$(tr -dc 'A-Za-z0-9!#$%*+.=?@_' </dev/urandom | head -c 12  ; echo)
+  PASSPHRASE=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 12  ; echo)
   # Only generate a random passphrase if the user has not configured their own one
   if grep -q -E "^?wpa_passphrase=wifipros" /etc/wlanpi-hotspot/conf/hostapd.conf; then
     sudo sed -i "s/^#\?wpa_passphrase=.*/wpa_passphrase=$PASSPHRASE/" /etc/wlanpi-hotspot/conf/hostapd.conf
