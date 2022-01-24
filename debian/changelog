@@ -1,4 +1,4 @@
-wlanpi-hotspot (1.0.7) unstable; urgency=medium
+wlanpi-hotspot (1.0.7-1) unstable; urgency=medium
 
   * Generate random WPA2 passphrase if the user has not configured their own
 
