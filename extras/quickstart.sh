@@ -162,11 +162,11 @@ SEC
     echo "Writing supplied configuration values..."
 
     # hostapd configs
-    sed -i "s/^interface=wlan.*/interface=$INTERFACE/" $CONFIG_FILE
-    sed -i "s/^ssid=.*$/ssid=$SSID/" $CONFIG_FILE
-    sed -i "s/^wpa_passphrase=.*$/wpa_passphrase=$KEY/" $CONFIG_FILE
-    sed -i "s/^country_code=.*$/country_code=$COUNTRYCODE/" $CONFIG_FILE
-    sed -i "s/^channel=.*$/channel=$CHANNEL/" $CONFIG_FILE
+    sed -i "s/^#\?interface=wlan.*/interface=$INTERFACE/" $CONFIG_FILE
+    sed -i "s/^#\?ssid=.*$/ssid=$SSID/" $CONFIG_FILE
+    sed -i "s/^#\?wpa_passphrase=.*$/wpa_passphrase=$KEY/" $CONFIG_FILE
+    sed -i "s/^#\?country_code=.*$/country_code=$COUNTRYCODE/" $CONFIG_FILE
+    sed -i "s/^#\?channel=.*$/channel=$CHANNEL/" $CONFIG_FILE
 
     # dhcpd config
     sed -i "s/^interface wlan.*$/interface $INTERFACE;/" $DHCP_FILE
