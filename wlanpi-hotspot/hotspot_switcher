@@ -5,6 +5,8 @@
 NAME=hotspot_switcher
 DESC="Script to switch hotspot on/off"
 STATUS_FILE="/etc/wlanpi-state"
+HOSTAPD_CONF_FILE="/etc/hostapd/hostapd.conf"
+HOTSPOT_CONF_FILE="/etc/wlanpi-hotspot/conf/hostapd.conf"
 
 if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root" 
@@ -43,26 +45,38 @@ hotspot_on () {
      exit 1
   fi
 
-  echo "Creating a unique SSID"
-  # Get the last 3 chars of eth0 MAC address
-  LAST_3_CHARS_MAC=$(sed s/://g /sys/class/net/eth0/address | grep -o '...$')
-  # Check if we got 3 chars
-  if [ ${#LAST_3_CHARS_MAC} -ne 3 ]; then
-    echo "Failed parsing eth0 MAC address during unique SSID creation"
-    exit 1
-  fi
-  # Configure the unique SSID
-  if grep -q -E "^?ssid=" /etc/wlanpi-hotspot/conf/hostapd.conf; then
-    sudo sed -i "s/^#\?ssid=.*/ssid=WLAN Pi $LAST_3_CHARS_MAC/" /etc/wlanpi-hotspot/conf/hostapd.conf
+  # check if we are using the factory shipped SSID, rename if we are
+  echo "Checking for factory default SSID name"
+  if grep -q "ssid=WLAN_Pi_Default_SSID" $HOTSPOT_CONF_FILE; then
+    echo "Creating a unique SSID as using default SSID"
+
+    # Get the last 3 chars of eth0 MAC address
+    LAST_3_CHARS_MAC=$(sed s/://g /sys/class/net/eth0/address | grep -o '...$')
+    
+    # Check if we got 3 chars
+    if [ ${#LAST_3_CHARS_MAC} -ne 3 ]; then
+      echo "Failed parsing eth0 MAC address during unique SSID creation"
+      exit 1
+    fi
+  
+    # Configure the unique SSID
+    sudo sed -i "s/^#\?ssid=.*/ssid=WLAN_Pi_$LAST_3_CHARS_MAC/" $HOTSPOT_CONF_FILE
+  
   else
-    echo "ssid=WLAN Pi $LAST_3_CHARS_MAC" >> /etc/wlanpi-hotspot/conf/hostapd.conf
+    echo "SSID already customized, ignoring."
   fi
 
-  echo "Generating a random WPA2 passphrase"
-  PASSPHRASE=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 12  ; echo)
-  # Only generate a random passphrase if the user has not configured their own one
-  if grep -q -E "^?wpa_passphrase=wifipros" /etc/wlanpi-hotspot/conf/hostapd.conf; then
-    sudo sed -i "s/^#\?wpa_passphrase=.*/wpa_passphrase=$PASSPHRASE/" /etc/wlanpi-hotspot/conf/hostapd.conf
+  # check if we are using the factory shipped WPA2 passphrase, re-gen if we are
+  echo "Checking for factory default WPA2 passphrase"
+  if grep -q "wpa_passphrase=WL@NP123" $HOTSPOT_CONF_FILE; then
+    echo "Generating a random WPA2 passphrase"
+    PASSPHRASE=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 12  ; echo)
+
+    # substitute in new random pwd
+    sudo sed -i "s/^#\?wpa_passphrase=.*/wpa_passphrase=$PASSPHRASE/" $HOTSPOT_CONF_FILE
+  
+  else
+    echo "WPA2 passphrase already customized, ignoring."
   fi
 
   echo "Enabling hotspot..."
@@ -75,8 +89,8 @@ hotspot_on () {
   cp /etc/default/ufw /etc/default/ufw.hspt
   cp /etc/ufw/before.rules /etc/ufw/before.rules.hspt
   # This file may or may not exist
-  if [ -e /etc/hostapd/hostapd.conf ]; then
-    cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.hspt
+  if [ -e "$HOSTAPD_CONF_FILE" ]; then
+    cp $HOSTAPD_CONF_FILE "${HOSTAPD_CONF_FILE}.hspt"
   fi
   # Remove existing config files
   echo "Removing existing config files..."
@@ -87,18 +101,21 @@ hotspot_on () {
   rm /etc/default/ufw
   rm /etc/ufw/before.rules
   # This file may or may not exist
-  if [ -e /etc/hostapd/hostapd.conf ]; then
-    rm /etc/hostapd/hostapd.conf
+  if [ -e "$HOSTAPD_CONF_FILE" ]; then
+    rm $HOSTAPD_CONF_FILE
   fi
   # Link to hotspot config files
   echo "Creating links to config files..."
   ln -s /etc/wlanpi-hotspot/default/isc-dhcp-server /etc/default/isc-dhcp-server 
   ln -s /etc/wlanpi-hotspot/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf
   ln -s /etc/wlanpi-hotspot/network/interfaces /etc/network/interfaces
-  ln -s /etc/wlanpi-hotspot/conf/hostapd.conf /etc/hostapd/hostapd.conf
+  ln -s $HOTSPOT_CONF_FILE $HOSTAPD_CONF_FILE
   ln -s /etc/wlanpi-hotspot/sysctl/sysctl.conf /etc/sysctl.conf
   ln -s /etc/wlanpi-hotspot/default/ufw /etc/default/ufw
   ln -s /etc/wlanpi-hotspot/ufw/before.rules /etc/ufw/before.rules
+
+  # enable hostapd service to start after reboot
+  systemctl enable hostapd
 
   # Signal that hotspot active
   echo "hotspot" > $STATUS_FILE
@@ -137,7 +154,7 @@ hotspot_off () {
   unlink /etc/default/isc-dhcp-server
   unlink /etc/dhcp/dhcpd.conf
   unlink /etc/network/interfaces
-  unlink /etc/hostapd/hostapd.conf
+  unlink $HOSTAPD_CONF_FILE
   unlink /etc/sysctl.conf
   unlink /etc/default/ufw
   unlink /etc/ufw/before.rules
@@ -152,9 +169,12 @@ hotspot_off () {
   cp /etc/ufw/before.rules.hspt /etc/ufw/before.rules
 
   # This file may or may not exist
-  if [ -e /etc/hostapd/hostapd.conf.hspt ]; then
-    cp /etc/hostapd/hostapd.conf.hspt /etc/hostapd/hostapd.conf
+  if [ -e "${HOSTAPD_CONF_FILE}.hspt" ]; then
+    cp "${HOSTAPD_CONF_FILE}.hspt" $HOSTAPD_CONF_FILE
   fi
+
+  # disable hostapd service (no start after reboot)
+  systemctl disable hostapd
 
   echo "WLAN Pi will now reboot"
   echo "classic" > $STATUS_FILE
@@ -191,9 +211,6 @@ case "$1" in
         ;;
   status)
         status
-        ;;
-  install)
-        install
         ;;
   version)
         version;;
