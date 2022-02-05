@@ -47,7 +47,7 @@ hotspot_on () {
 
   # check if we are using the factory shipped SSID, rename if we are
   echo "Checking for factory default SSID name"
-  if grep -q "ssid=WLAN_Pi_Default_SSID" $HOTSPOT_CONF_FILE; then
+  if grep -q "ssid=WLAN Pi Default SSID" $HOTSPOT_CONF_FILE; then
     echo "Creating a unique SSID as using default SSID"
 
     # Get the last 3 chars of eth0 MAC address
@@ -60,7 +60,7 @@ hotspot_on () {
     fi
   
     # Configure the unique SSID
-    sudo sed -i "s/^#\?ssid=.*/ssid=WLAN_Pi_$LAST_3_CHARS_MAC/" $HOTSPOT_CONF_FILE
+    sudo sed -i "s/^#\?ssid=.*/ssid=WLAN Pi $LAST_3_CHARS_MAC/" $HOTSPOT_CONF_FILE
   
   else
     echo "SSID already customized, ignoring."
