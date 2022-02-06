@@ -98,3 +98,12 @@ To switch out of "Hotspot" mode, SSH to the WLANPi using network address 172.16.
 ```
 
 When this command is executed, the original ("classic" mode) networking configuration files will be restored and the WLANPi will reboot. After the reboot, the WLANPi will operate as it did before the switch to "Hotspot" mode.
+
+## Contributing
+
+If you'd like to contribute to this project, please visit our ["Contributing Guidelines"](https://github.com/WLAN-Pi/.github/blob/6c505d84a8ec6d5004958fe2289659bcdd44118f/contributing.md) page.
+
+## Code of Conduct
+
+Please note the [Code of Conduct](https://github.com/WLAN-Pi/.github/blob/6c505d84a8ec6d5004958fe2289659bcdd44118f/code_of_conduct.md) guidelines that apply to activities within the WLAN Pi project. 
+
