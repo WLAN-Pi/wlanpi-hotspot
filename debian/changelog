@@ -1,3 +1,9 @@
+wlanpi-hotspot (1.0.8-1) UNRELEASED; urgency=medium
+
+  * fix bad var assignment for interface name in quickstart
+
+ -- Nigel Bowden <wifinigel@gmail.com>  Sun, 06 Feb 2022 08:57:52 +0000
+
 wlanpi-hotspot (1.0.8) UNRELEASED; urgency=medium
 
   * Switch to new factory default SSID name & passphrase

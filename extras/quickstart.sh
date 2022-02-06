@@ -41,7 +41,7 @@ CHANNEL=
 get_interface () {
     read -p "Please enter the network interface name to be used for the wireless connection [$INTERFACE_DEFAULT] : " INTERFACE
     if [ "$INTERFACE" == "" ]; then 
-        SSID=$INTERFACE_DEFAULT;
+        INTERFACE=$INTERFACE_DEFAULT;
     fi
     return
 }
