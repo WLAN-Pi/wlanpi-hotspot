@@ -1,10 +1,17 @@
-wlanpi-hotspot (1.0.8-1) UNRELEASED; urgency=medium
+wlanpi-hotspot (1.0.9) unstable; urgency=medium
+
+  * Remove visually similar chars from pseudo random password
+    (0,1,i,l,o,I,L,O).
+
+ -- Josh Schmelzle <josh@joshschmelzle.com>  Sat, 12 Feb 2022 13:26:32 -0500
+
+wlanpi-hotspot (1.0.8-1) unstable; urgency=medium
 
   * fix bad var assignment for interface name in quickstart
 
  -- Nigel Bowden <wifinigel@gmail.com>  Sun, 06 Feb 2022 08:57:52 +0000
 
-wlanpi-hotspot (1.0.8) UNRELEASED; urgency=medium
+wlanpi-hotspot (1.0.8) unstable; urgency=medium
 
   * Switch to new factory default SSID name & passphrase
 
