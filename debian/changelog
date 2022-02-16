@@ -1,3 +1,10 @@
+wlanpi-hotspot (1.0.10) unstable; urgency=medium
+
+  * Enables isc-dhcp-server in Hotspot mode
+  * Disables isc-dhcp-server after switching back to Classic mode
+
+ -- Jiri Brejcha <jirka@jiribrejcha.net>  Sun, 16 Feb 2022 13:59:00 +0000
+
 wlanpi-hotspot (1.0.9) unstable; urgency=medium
 
   * Remove visually similar chars from pseudo random password
