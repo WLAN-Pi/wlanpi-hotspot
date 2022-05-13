@@ -52,16 +52,16 @@ hotspot_on () {
 
     # Get the last 3 chars of eth0 MAC address
     LAST_3_CHARS_MAC=$(sed s/://g /sys/class/net/eth0/address | grep -o '...$')
-    
+
     # Check if we got 3 chars
     if [ ${#LAST_3_CHARS_MAC} -ne 3 ]; then
       echo "Failed parsing eth0 MAC address during unique SSID creation"
       exit 1
     fi
-  
+
     # Configure the unique SSID
     sudo sed -i "s/^#\?ssid=.*/ssid=WLAN Pi $LAST_3_CHARS_MAC/" $HOTSPOT_CONF_FILE
-  
+
   else
     echo "SSID already customized, ignoring."
   fi
@@ -74,7 +74,7 @@ hotspot_on () {
 
     # substitute in new random pwd
     sudo sed -i "s/^#\?wpa_passphrase=.*/wpa_passphrase=$PASSPHRASE/" $HOTSPOT_CONF_FILE
-  
+
   else
     echo "WPA2 passphrase already customized, ignoring."
   fi
@@ -114,6 +114,9 @@ hotspot_on () {
   ln -s /etc/wlanpi-hotspot/default/ufw /etc/default/ufw
   ln -s /etc/wlanpi-hotspot/ufw/before.rules /etc/ufw/before.rules
 
+  #Disable wpa_supplicant which conflicts with hostapd
+  systemctl disable wpa_supplicant
+
   # Enable services to start after reboot
   systemctl enable hostapd isc-dhcp-server
 
@@ -123,8 +126,6 @@ hotspot_on () {
   sleep 1
   sync
   reboot
-
-  
 }
 
 ###############################################################################
@@ -175,7 +176,10 @@ hotspot_off () {
 
   # Disable services to start after reboot
   systemctl disable hostapd isc-dhcp-server
-
+  
+  #Enable wpa_supplicant
+  systemctl enable wpa_supplicant
+  
   echo "WLAN Pi will now reboot"
   echo "classic" > $STATUS_FILE
   sleep 1
