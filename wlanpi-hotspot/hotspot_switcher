@@ -114,9 +114,6 @@ hotspot_on () {
   ln -s /etc/wlanpi-hotspot/default/ufw /etc/default/ufw
   ln -s /etc/wlanpi-hotspot/ufw/before.rules /etc/ufw/before.rules
 
-  #Disable wpa_supplicant which conflicts with hostapd
-  systemctl disable wpa_supplicant
-
   # Enable services to start after reboot
   systemctl enable hostapd isc-dhcp-server
 
@@ -176,9 +173,6 @@ hotspot_off () {
 
   # Disable services to start after reboot
   systemctl disable hostapd isc-dhcp-server
-  
-  #Enable wpa_supplicant
-  systemctl enable wpa_supplicant
   
   echo "WLAN Pi will now reboot"
   echo "classic" > $STATUS_FILE
