@@ -1,3 +1,9 @@
+wlanpi-hotspot (1.0.13) unstable; urgency=medium
+
+  * Fixed: Hotspot mode doesn't broadcast SSID
+
+ -- Jiri Brejcha <jirka@jiribrejcha.net>  Mon, 06 Jun 2022 14:25:00 +0000
+
 wlanpi-hotspot (1.0.12) unstable; urgency=medium
 
   * Revert changes introduced in 1.0.11
