@@ -18,12 +18,19 @@ fi
 #
 # Activate hotspot:
 #
-# 1. Backup various existing files to allow restoration when hotspot
-#    deactivated
-# 2. Remove a number of existing files that need to be replaced
-# 3. Create links from deleted file locations to hotspot config files
-# 4. Create status file to indicate hotspot is active
-# 5. Reboot the wlanpi to ensure clean activation
+#  1. Verify we're in classic mode
+#  2. Ensure wlan0 supports AP mode
+#  3. Create custom SSID if set to factory default
+#  4. Create randomised PSK if not already done
+#  5. Copy networkd files in to place for new networking config after reboot
+#  6. Disable wpa_supplicant services to prevent hostapd conflict after reboot 
+#  7. Backup various existing files to allow restoration when hotspot
+#     deactivated
+#  8. Remove a number of existing files that need to be replaced
+#  9. Create links from deleted file locations to hotspot config files
+# 10. Enable hotspot service to be active after reboot
+# 11. Create status file to indicate hotspot is active
+# 12. Reboot the wlanpi to ensure clean activation
 #
 ###############################################################################
 hotspot_on () {
@@ -80,11 +87,16 @@ hotspot_on () {
   fi
 
   echo "Enabling hotspot..."
+
+    # Copy networkd files into place
+  sudo \cp /etc/systemd/network.hotspot/*  /etc/systemd/network
+
+  # Disable wpa_supplicant to prevent conflict with hostapd
+  sudo systemctl disable wpa_supplicant@wlan0.service
+  sudo systemctl disable wpa_supplicant@wlan1.service
+
   #Backup existing config files
   echo "Backing up existing config files..."
-  cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.hspt
-  cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.hspt
-  cp /etc/network/interfaces /etc/network/interfaces.hspt
   cp /etc/sysctl.conf /etc/sysctl.conf.hspt
   cp /etc/default/ufw /etc/default/ufw.hspt
   cp /etc/ufw/before.rules /etc/ufw/before.rules.hspt
@@ -94,9 +106,6 @@ hotspot_on () {
   fi
   # Remove existing config files
   echo "Removing existing config files..."
-  rm /etc/default/isc-dhcp-server
-  rm /etc/dhcp/dhcpd.conf
-  rm /etc/network/interfaces
   rm /etc/sysctl.conf
   rm /etc/default/ufw
   rm /etc/ufw/before.rules
@@ -106,16 +115,13 @@ hotspot_on () {
   fi
   # Link to hotspot config files
   echo "Creating links to config files..."
-  ln -s /etc/wlanpi-hotspot/default/isc-dhcp-server /etc/default/isc-dhcp-server 
-  ln -s /etc/wlanpi-hotspot/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf
-  ln -s /etc/wlanpi-hotspot/network/interfaces /etc/network/interfaces
   ln -s $HOTSPOT_CONF_FILE $HOSTAPD_CONF_FILE
   ln -s /etc/wlanpi-hotspot/sysctl/sysctl.conf /etc/sysctl.conf
   ln -s /etc/wlanpi-hotspot/default/ufw /etc/default/ufw
   ln -s /etc/wlanpi-hotspot/ufw/before.rules /etc/ufw/before.rules
 
   # Enable services to start after reboot
-  systemctl enable hostapd isc-dhcp-server
+  systemctl enable hostapd
 
   # Signal that hotspot active
   echo "hotspot" > $STATUS_FILE
@@ -129,9 +135,12 @@ hotspot_on () {
 #
 # Deactivate hotspot:
 #
-# 1. Remove links created during activation
-# 2. Restore config files backed up during activation
-# 3. Remove firewall rules added during activation
+# 1. Check we're in hotspot mode
+# 2. Copy classic mode networkd files back into place
+# 3. Re-enable wpa_supplicant services
+# 4. Remove links created during activation
+# 5. Restore config files backed up during activation
+# 6. Disable hostapd
 # 4. Remove status file to indicate hotspot no longer active
 # 5. Reboot wlanpi to provide clean restoration of services
 #
@@ -146,12 +155,15 @@ hotspot_off () {
   fi
 
   echo "Starting switch from hotspot mode to classic mode"
+  # Copy classic mode networkd files back into place
+  sudo \cp /etc/systemd/network.classic/*  /etc/systemd/network
+
+  # Enable wpa_supplicant services
+  sudo systemctl enable wpa_supplicant@wlan0.service
+  sudo systemctl enable wpa_supplicant@wlan1.service
 
   # Remove links to config files
   echo "Removing links to config files..."
-  unlink /etc/default/isc-dhcp-server
-  unlink /etc/dhcp/dhcpd.conf
-  unlink /etc/network/interfaces
   unlink $HOSTAPD_CONF_FILE
   unlink /etc/sysctl.conf
   unlink /etc/default/ufw
@@ -159,9 +171,6 @@ hotspot_off () {
 
   # Restore original config files
   echo "Restoring original config files..."
-  cp /etc/default/isc-dhcp-server.hspt /etc/default/isc-dhcp-server
-  cp /etc/dhcp/dhcpd.conf.hspt /etc/dhcp/dhcpd.conf
-  cp /etc/network/interfaces.hspt /etc/network/interfaces
   cp /etc/sysctl.conf.hspt /etc/sysctl.conf
   cp /etc/default/ufw.hspt /etc/default/ufw
   cp /etc/ufw/before.rules.hspt /etc/ufw/before.rules
@@ -172,7 +181,7 @@ hotspot_off () {
   fi
 
   # Disable services to start after reboot
-  systemctl disable hostapd isc-dhcp-server
+  systemctl disable hostapd
   
   echo "WLAN Pi will now reboot"
   echo "classic" > $STATUS_FILE
