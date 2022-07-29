@@ -7,6 +7,9 @@ DESC="Script to switch hotspot on/off"
 STATUS_FILE="/etc/wlanpi-state"
 HOSTAPD_CONF_FILE="/etc/hostapd/hostapd.conf"
 HOTSPOT_CONF_FILE="/etc/wlanpi-hotspot/conf/hostapd.conf"
+NETWORKD_DIR=/etc/systemd/network
+CLASSIC_MODE_NETWORK_DIR=/etc/systemd/network.classic
+HOTSPOT_MODE_NETWORK_DIR=/etc/systemd/network.hotspot
 
 if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root" 
@@ -22,7 +25,7 @@ fi
 #  2. Ensure wlan0 supports AP mode
 #  3. Create custom SSID if set to factory default
 #  4. Create randomised PSK if not already done
-#  5. Copy networkd files in to place for new networking config after reboot
+#  5. Move networkd files in to place for new networking config after reboot
 #  6. Disable wpa_supplicant services to prevent hostapd conflict after reboot 
 #  7. Backup various existing files to allow restoration when hotspot
 #     deactivated
@@ -88,8 +91,11 @@ hotspot_on () {
 
   echo "Enabling hotspot..."
 
-    # Copy networkd files into place
-  sudo \cp /etc/systemd/network.hotspot/*  /etc/systemd/network
+  # move classic mode network files to own networkd dir
+  sudo mv $NETWORKD_DIR/*.net* $CLASSIC_MODE_NETWORK_DIR
+
+  # move hotspot mode files in to live networkd dir
+  sudo mv $HOTSPOT_MODE_NETWORK_DIR/*.net* $NETWORKD_DIR 
 
   # Disable wpa_supplicant to prevent conflict with hostapd
   sudo systemctl disable wpa_supplicant@wlan0.service
@@ -136,7 +142,7 @@ hotspot_on () {
 # Deactivate hotspot:
 #
 # 1. Check we're in hotspot mode
-# 2. Copy classic mode networkd files back into place
+# 2. Move classic mode networkd files back into place
 # 3. Re-enable wpa_supplicant services
 # 4. Remove links created during activation
 # 5. Restore config files backed up during activation
@@ -155,8 +161,12 @@ hotspot_off () {
   fi
 
   echo "Starting switch from hotspot mode to classic mode"
-  # Copy classic mode networkd files back into place
-  sudo \cp /etc/systemd/network.classic/*  /etc/systemd/network
+
+  # move hotspot mode network files to own networkd dir
+  sudo mv $NETWORKD_DIR/*.net* $HOTSPOT_MODE_NETWORK_DIR
+
+  # move classic mode files in to live networkd dir
+  sudo mv $CLASSIC_MODE_NETWORK_DIR/*.net* $NETWORKD_DIR
 
   # Enable wpa_supplicant services
   sudo systemctl enable wpa_supplicant@wlan0.service
