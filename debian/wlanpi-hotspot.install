@@ -1,4 +1,3 @@
 install/etc/wlanpi-hotspot etc
-install/etc/system/network.hotspot etc/systemd
 wlanpi-hotspot opt
 extras/* opt/wlanpi-hotspot/extras
