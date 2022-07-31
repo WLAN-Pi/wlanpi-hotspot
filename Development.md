@@ -29,7 +29,7 @@ Tools required:
  - The built package can be found in the parent folder from the source code
  - Move to the parent folder in the bash terminal
  - Identify the new `.deb` package file
- - Install the new package and ensure all runs as expected: `sudo dpkg -i ./xxxxx.deb`
+ - Install the new package and ensure all runs as expected: `sudo dpkg -i ./wlanpi-hotspot_x.x.xx_arm64.deb`
 
 
 
