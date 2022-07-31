@@ -11,6 +11,7 @@ Tools required:
 
 1. SSH to the WLAN Pi from your dev machine
 2. (On WLAN Pi CLI) Clone this repo : `git clone https://github.com/WLAN-Pi/wlanpi-hotspot.git`
+3. (On WLAN Pi CLI) change to the repo dir: `cd wlanpi-hotspot`
 3. (On WLAN Pi CLI) set git username: `git config --local user.name yourgitusername`
 4. (On WLAN Pi CLI) set it email address: `git config --local user.email yourgitemail@myowndomain.com`
 5. (On WLAN Pi CLI) add required build tools: `sudo apt-get install devscripts`
