@@ -106,7 +106,6 @@ hotspot_on () {
 
   # Disable wpa_supplicant to prevent conflict with hostapd
   sudo systemctl disable wpa_supplicant@wlan0.service
-  sudo systemctl disable wpa_supplicant@wlan1.service
 
   #Backup existing config files
   echo "Backing up existing config files..."
@@ -183,7 +182,6 @@ hotspot_off () {
 
   # Enable wpa_supplicant services
   sudo systemctl enable wpa_supplicant@wlan0.service
-  sudo systemctl enable wpa_supplicant@wlan1.service
 
   # Remove links to config files
   echo "Removing links to config files..."
