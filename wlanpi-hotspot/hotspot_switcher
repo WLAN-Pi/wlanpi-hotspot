@@ -4,12 +4,15 @@
 
 NAME=hotspot_switcher
 DESC="Script to switch hotspot on/off"
+VERSION="1.0.13"
 STATUS_FILE="/etc/wlanpi-state"
 HOSTAPD_CONF_FILE="/etc/hostapd/hostapd.conf"
 HOTSPOT_CONF_FILE="/etc/wlanpi-hotspot/conf/hostapd.conf"
-NETWORKD_DIR=/etc/systemd/network
+NETWORKD_DIR="/etc/systemd/network"
+WPA_DIR="/etc/wpa_supplicant"
 CLASSIC_MODE_NETWORK_DIR="/etc/systemd/network.classic"
 HOTSPOT_MODE_NETWORK_DIR="/etc/wlanpi-hotspot/systemd/network"
+HOTSPOT_MODE_WPA_DIR="/etc/wlanpi-hotspot/wpa_supplicant"
 
 if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root" 
@@ -93,9 +96,13 @@ hotspot_on () {
 
   # move classic mode network files to own networkd dir
   sudo mv $NETWORKD_DIR/*.net* $CLASSIC_MODE_NETWORK_DIR
+  # move classic mode wpa_supplicant files to own networkd dir
+  sudo mv $WPA_DIR/wpa*.conf $CLASSIC_MODE_NETWORK_DIR
 
-  # move hotspot mode files in to live networkd dir
-  sudo mv $HOTSPOT_MODE_NETWORK_DIR/*.net* $NETWORKD_DIR 
+  # move hotspot mode network files in to live networkd dir
+  sudo mv $HOTSPOT_MODE_NETWORK_DIR/*.net* $NETWORKD_DIR
+  # move hotspot mode wpa_supplicant files in to live networkd dir
+  sudo mv $HOTSPOT_MODE_WPA_DIR/wpa*.conf $WPA_DIR
 
   # Disable wpa_supplicant to prevent conflict with hostapd
   sudo systemctl disable wpa_supplicant@wlan0.service
@@ -165,8 +172,14 @@ hotspot_off () {
   # move hotspot mode network files to own networkd dir
   sudo mv $NETWORKD_DIR/*.net* $HOTSPOT_MODE_NETWORK_DIR
 
+  # move hotspot mode wpa_supplicant files back to own networkd dir
+  sudo mv $WPA_DIR/wpa*.conf $HOTSPOT_MODE_WPA_DIR
+
   # move classic mode files in to live networkd dir
   sudo mv $CLASSIC_MODE_NETWORK_DIR/*.net* $NETWORKD_DIR
+
+  # move classic mode wpa_supplicant files live networkd dir
+  sudo mv $CLASSIC_MODE_NETWORK_DIR/wpa*.conf $WPA_DIR
 
   # Enable wpa_supplicant services
   sudo systemctl enable wpa_supplicant@wlan0.service
