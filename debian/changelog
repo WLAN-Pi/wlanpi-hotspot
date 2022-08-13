@@ -1,3 +1,9 @@
+wlanpi-hotspot (2.0.0) unstable; urgency=medium
+
+  * Move to networkd support
+
+ -- Nigel Bowden <wifinigel@gmail.com>  Sat, 13 Aug 2022 18:05:55 +0000
+
 wlanpi-hotspot (1.0.13) unstable; urgency=medium
 
   * Fixed: Hotspot mode doesn't broadcast SSID
