@@ -12,5 +12,5 @@ Multi-Arch: foreign
 Depends: ${misc:Depends},
          ${shlibs:Depends},
          hostapd
-Description: WLAN Pi simple hotspot
+Description: WLAN Pi - a simple hotspot
  WLAN Pi simple hotspot.
