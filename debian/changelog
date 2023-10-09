@@ -1,3 +1,9 @@
+wlanpi-hotspot (1.0.14) unstable; urgency=medium
+
+  * Use 5 GHz channel 36 by default
+
+ -- Jiri Brejcha <jirka@jiribrejcha.net>  Mon, 09 Oct 2023 23:33:00 +0000
+
 wlanpi-hotspot (1.0.13) unstable; urgency=medium
 
   * Fixed: Hotspot mode doesn't broadcast SSID
