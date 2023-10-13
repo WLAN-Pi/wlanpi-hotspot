@@ -1,6 +1,7 @@
-wlanpi-hotspot (1.0.15) unstable; urgency=medium
+wlanpi-hotspot (1.0.16) unstable; urgency=medium
 
   * Sync hotspot and wconsole passphrases, they both use the same SSID
+  * Fixed: Leading - character in passphrase broke hostapd  
 
  -- Jiri Brejcha <jirka@jiribrejcha.net>  Fri, 13 Oct 2023 07:33:00 +0000
 
