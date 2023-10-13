@@ -2,17 +2,17 @@
 #
 # hotspot_switcher       script to switch hotspot on/off
 
-NAME=hotspot_switcher
+NAME="hotspot_switcher"
 DESC="Script to switch hotspot on/off"
 STATUS_FILE="/etc/wlanpi-state"
 HOSTAPD_CONF_FILE="/etc/hostapd/hostapd.conf"
 HOTSPOT_CONF_FILE="/etc/wlanpi-hotspot/conf/hostapd.conf"
+WCONSOLE_CONF_FILE="/etc/wlanpi-wconsole/conf/hostapd.conf"
 
 if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root" 
+   echo "Error: This script must be run as root"
    exit 1
 fi
-
 
 ###############################################################################
 #
@@ -26,14 +26,15 @@ fi
 # 5. Reboot the wlanpi to ensure clean activation
 #
 ###############################################################################
+
 hotspot_on () {
 
-  echo "Starting switch from classic mode to hostpot mode"
+  echo "Starting switch from Classic mode to Hostpot mode"
 
   # check what state the WLAN Pi is in classic mode
   PI_STATUS=`cat $STATUS_FILE | grep 'classic'` || true
   if  [ -z "$PI_STATUS" ]; then
-     echo "Failed - WLAN Pi is not in classic mode."
+     echo "Failed: WLAN Pi is not in Classic mode"
      exit 1
   fi
 
@@ -41,13 +42,13 @@ hotspot_on () {
   # iw list | awk '/Supported interface modes/, /Band/' | grep '\* AP'
    AP_SUPPORT=`iw list | awk '/Supported interface modes/, /Band/' | grep '\* AP'` || true
    if  [ -z "$AP_SUPPORT" ]; then
-     echo "Failed - AP Mode not supported by adapter."
+     echo "Failed: AP Mode not supported by Wi-Fi adapter"
      exit 1
   fi
 
   # check if we are using the factory shipped SSID, rename if we are
   echo "Checking for factory default SSID name"
-  if grep -q "ssid=WLAN Pi Default SSID" $HOTSPOT_CONF_FILE; then
+  if grep -q -E "^?ssid=WLAN Pi Default SSID" $HOTSPOT_CONF_FILE && grep -q -E "^?ssid=WLAN Pi Default SSID" $WCONSOLE_CONF_FILE; then
     echo "Creating a unique SSID as using default SSID"
 
     # Get the last 3 chars of eth0 MAC address
@@ -55,33 +56,37 @@ hotspot_on () {
 
     # Check if we got 3 chars
     if [ ${#LAST_3_CHARS_MAC} -ne 3 ]; then
-      echo "Failed parsing eth0 MAC address during unique SSID creation"
+      echo "Failed: Couldn't get eth0 MAC address during unique SSID creation"
       exit 1
     fi
 
     # Configure the unique SSID
-    sudo sed -i "s/^#\?ssid=.*/ssid=WLAN Pi $LAST_3_CHARS_MAC/" $HOTSPOT_CONF_FILE
+    echo "Applying new SSID: WLAN Pi <last 3 chars of eth0 MAC>"
+    sed -i "s/^#\?ssid=.*/ssid=WLAN Pi $LAST_3_CHARS_MAC/" $HOTSPOT_CONF_FILE
+    sed -i "s/^#\?ssid=.*/ssid=WLAN Pi $LAST_3_CHARS_MAC/" $WCONSOLE_CONF_FILE
 
   else
-    echo "SSID already customized, ignoring."
+    echo "SSID is already customised"
   fi
 
   # check if we are using the factory shipped WPA2 passphrase, re-gen if we are
   echo "Checking for factory default WPA2 passphrase"
-  if grep -q "wpa_passphrase=WL@NP123" $HOTSPOT_CONF_FILE; then
-    echo "Generating a random WPA2 passphrase"
+  if grep -q -E "^?wpa_passphrase=WL@NP123" $HOTSPOT_CONF_FILE && grep -q -E "^?wpa_passphrase=WL@NP123" $WCONSOLE_CONF_FILE; then
+    echo "Generating a new random WPA2 passphrase"
     PASSPHRASE=$(tr -dc 'A-Ha-h2-9-J-Kj-k2-9-M-Nm-n2-9-P-Zp-z2-9' </dev/urandom | head -c 12  ; echo)
 
     # substitute in new random pwd
-    sudo sed -i "s/^#\?wpa_passphrase=.*/wpa_passphrase=$PASSPHRASE/" $HOTSPOT_CONF_FILE
+    echo "Applying randomised passphrase to hotspot and wconsole SSID"
+    sed -i "s/^#\?wpa_passphrase=.*/wpa_passphrase=$PASSPHRASE/" $HOTSPOT_CONF_FILE
+    sed -i "s/^#\?wpa_passphrase=.*/wpa_passphrase=$PASSPHRASE/" $WCONSOLE_CONF_FILE
 
   else
-    echo "WPA2 passphrase already customized, ignoring."
+    echo "WPA2 passphrase is already customised"
   fi
 
-  echo "Enabling hotspot..."
+  echo "Enabling hotspot ..."
   #Backup existing config files
-  echo "Backing up existing config files..."
+  echo "Backing up existing config files ..."
   cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.hspt
   cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.hspt
   cp /etc/network/interfaces /etc/network/interfaces.hspt
@@ -93,7 +98,7 @@ hotspot_on () {
     cp $HOSTAPD_CONF_FILE "${HOSTAPD_CONF_FILE}.hspt"
   fi
   # Remove existing config files
-  echo "Removing existing config files..."
+  echo "Removing existing config files ..."
   rm /etc/default/isc-dhcp-server
   rm /etc/dhcp/dhcpd.conf
   rm /etc/network/interfaces
@@ -105,8 +110,8 @@ hotspot_on () {
     rm $HOSTAPD_CONF_FILE
   fi
   # Link to hotspot config files
-  echo "Creating links to config files..."
-  ln -s /etc/wlanpi-hotspot/default/isc-dhcp-server /etc/default/isc-dhcp-server 
+  echo "Creating links to config files ..."
+  ln -s /etc/wlanpi-hotspot/default/isc-dhcp-server /etc/default/isc-dhcp-server
   ln -s /etc/wlanpi-hotspot/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf
   ln -s /etc/wlanpi-hotspot/network/interfaces /etc/network/interfaces
   ln -s $HOTSPOT_CONF_FILE $HOSTAPD_CONF_FILE
@@ -119,7 +124,7 @@ hotspot_on () {
 
   # Signal that hotspot active
   echo "hotspot" > $STATUS_FILE
-  echo "WLANPi will now reboot"
+  echo "WLAN Pi will now reboot"
   sleep 1
   sync
   reboot
@@ -136,19 +141,20 @@ hotspot_on () {
 # 5. Reboot wlanpi to provide clean restoration of services
 #
 ###############################################################################
+
 hotspot_off () {
 
   # check what state the WLAN Pi is in
   PI_STATUS=`cat $STATUS_FILE | grep 'hotspot'` || true
   if  [ -z "$PI_STATUS" ]; then
-     echo "Failed - WLAN Pi is not in hotspot mode."
+     echo "Failed: WLAN Pi is not in Hotspot mode"
      exit 1
   fi
 
-  echo "Starting switch from hotspot mode to classic mode"
+  echo "Starting switch from Hotspot mode to Classic mode"
 
   # Remove links to config files
-  echo "Removing links to config files..."
+  echo "Removing links to config files ..."
   unlink /etc/default/isc-dhcp-server
   unlink /etc/dhcp/dhcpd.conf
   unlink /etc/network/interfaces
@@ -158,7 +164,7 @@ hotspot_off () {
   unlink /etc/ufw/before.rules
 
   # Restore original config files
-  echo "Restoring original config files..."
+  echo "Restoring original config files ..."
   cp /etc/default/isc-dhcp-server.hspt /etc/default/isc-dhcp-server
   cp /etc/dhcp/dhcpd.conf.hspt /etc/dhcp/dhcpd.conf
   cp /etc/network/interfaces.hspt /etc/network/interfaces
@@ -173,7 +179,7 @@ hotspot_off () {
 
   # Disable services to start after reboot
   systemctl disable hostapd isc-dhcp-server
-  
+
   echo "WLAN Pi will now reboot"
   echo "classic" > $STATUS_FILE
   sleep 1
@@ -184,20 +190,19 @@ hotspot_off () {
 status () {
   PI_STATUS=`cat $STATUS_FILE | grep 'hotspot'` || true
   if  [ -z "$PI_STATUS" ]; then
-    echo "hotspot is currently disabled"
+    echo "Hotspot is currently disabled"
     exit 0
   else
-    echo "hotpot is currently enabled"
+    echo "Hotpot is currently enabled"
     exit 0
   fi
 
 }
 
 version () {
-    N=/etc/wlanpi-hotspot/$NAME
-        echo "Version: $N $VERSION" >&2
-        exit 1
-
+  VERSION=$(apt list --installed wlanpi-hotspot 2>/dev/null | grep wlanpi-hotspot | awk '{print $2}')
+  echo "Version: $VERSION" >&2
+  exit 0
 }
 
 case "$1" in
@@ -220,4 +225,3 @@ case "$1" in
 esac
 
 exit 0
-
