@@ -1,4 +1,4 @@
-wlanpi-hotspot (1.0.17) unstable; urgency=medium
+wlanpi-hotspot (1.0.18) unstable; urgency=medium
 
   * Using channel 1 (2.4 GHz)
 
