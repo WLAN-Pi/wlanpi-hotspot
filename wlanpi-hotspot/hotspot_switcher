@@ -109,6 +109,13 @@ hotspot_on () {
   if [ -e "$HOSTAPD_CONF_FILE" ]; then
     rm $HOSTAPD_CONF_FILE
   fi
+
+  # Check if the directory exists
+  if [ ! -d "/etc/hostapd" ]; then
+      echo "Directory /etc/hostapd does not exist. Creating it..."
+      mkdir -p "/etc/hostapd"
+  fi
+
   # Link to hotspot config files
   echo "Creating links to config files ..."
   ln -s /etc/wlanpi-hotspot/default/isc-dhcp-server /etc/default/isc-dhcp-server

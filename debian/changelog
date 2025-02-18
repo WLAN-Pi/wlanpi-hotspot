@@ -1,3 +1,10 @@
+wlanpi-hotspot (1.0.19) unstable; urgency=medium
+
+  * Fixed: Mode switching fails due to missing directory /etc/hostapd
+  * Fixed: 2 incompatible configuration lines in /etc/hostapd/hostapd.conf
+
+ -- Jiri Brejcha <jirka@jiribrejcha.net>  Tue, 18 Feb 2024 18:25:00 +0000
+
 wlanpi-hotspot (1.0.18) unstable; urgency=medium
 
   * Using channel 1 (2.4 GHz)
