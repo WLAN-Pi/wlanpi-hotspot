@@ -4,6 +4,7 @@
 
 NAME="hotspot_switcher"
 DESC="Script to switch hotspot on/off"
+WCONSOLE=false
 STATUS_FILE="/etc/wlanpi-state"
 HOSTAPD_CONF_FILE="/etc/hostapd/hostapd.conf"
 HOTSPOT_CONF_FILE="/etc/wlanpi-hotspot/conf/hostapd.conf"
@@ -30,6 +31,15 @@ fi
 hotspot_on () {
 
   echo "Starting switch from Classic mode to Hostpot mode"
+
+  if [ "$WCONSOLE" = true ]; then
+    # check we have the ser2net service installed
+    SER2NET_STATUS=`systemctl status ser2net| grep ser2net.service`
+    if  [ -z "$SER2NET_STATUS" ]; then
+       echo "Failed: ser2net service not found"
+       exit 1
+    fi
+  fi
 
   # check what state the WLAN Pi is in classic mode
   PI_STATUS=`cat $STATUS_FILE | grep 'classic'` || true
@@ -93,6 +103,9 @@ hotspot_on () {
   cp /etc/sysctl.conf /etc/sysctl.conf.hspt
   cp /etc/default/ufw /etc/default/ufw.hspt
   cp /etc/ufw/before.rules /etc/ufw/before.rules.hspt
+  if [ "$WCONSOLE" = true ] && [ -e /etc/ser2net.conf ]; then
+    cp /etc/ser2net.conf /etc/ser2net.conf.hspt
+  fi
   # This file may or may not exist
   if [ -e "$HOSTAPD_CONF_FILE" ]; then
     cp $HOSTAPD_CONF_FILE "${HOSTAPD_CONF_FILE}.hspt"
@@ -105,6 +118,9 @@ hotspot_on () {
   rm /etc/sysctl.conf
   rm /etc/default/ufw
   rm /etc/ufw/before.rules
+  if [ "$WCONSOLE" = true ] && [ -e /etc/ser2net.conf ]; then
+    rm /etc/ser2net.conf
+  fi
   # This file may or may not exist
   if [ -e "$HOSTAPD_CONF_FILE" ]; then
     rm $HOSTAPD_CONF_FILE
@@ -125,9 +141,23 @@ hotspot_on () {
   ln -s /etc/wlanpi-hotspot/sysctl/sysctl.conf /etc/sysctl.conf
   ln -s /etc/wlanpi-hotspot/default/ufw /etc/default/ufw
   ln -s /etc/wlanpi-hotspot/ufw/before.rules /etc/ufw/before.rules
+  if [ "$WCONSOLE" = true ]; then
+    ln -s /etc/wlanpi-wconsole/conf/ser2net.conf /etc/ser2net.conf
+    # Open up console ports on FW
+    ufw allow 2400:2408/tcp
+    ufw allow 4800:4808/tcp
+    ufw allow 9600:9608/tcp
+    ufw allow 19200:19208/tcp
+    ufw allow 38400:38408/tcp
+    ufw allow 11520:11528/tcp
+    ufw allow 2000:2008/tcp
+  fi
 
   # Enable services to start after reboot
   systemctl enable hostapd isc-dhcp-server
+  if [ "$WCONSOLE" = true ]; then
+    systemctl enable ser2net
+  fi
 
   # Signal that hotspot active
   echo "hotspot" > $STATUS_FILE
@@ -169,6 +199,9 @@ hotspot_off () {
   unlink /etc/sysctl.conf
   unlink /etc/default/ufw
   unlink /etc/ufw/before.rules
+  if [ "$WCONSOLE" = true ]; then
+    unlink /etc/ser2net.conf
+  fi
 
   # Restore original config files
   echo "Restoring original config files ..."
@@ -178,6 +211,18 @@ hotspot_off () {
   cp /etc/sysctl.conf.hspt /etc/sysctl.conf
   cp /etc/default/ufw.hspt /etc/default/ufw
   cp /etc/ufw/before.rules.hspt /etc/ufw/before.rules
+  if [ "$WCONSOLE" = true ]; then
+    if [ -e /etc/ser2net.conf.hspt ]; then
+      cp /etc/ser2net.conf.hspt /etc/ser2net.conf
+    fi
+    ufw delete allow 2400:2408/tcp
+    ufw delete allow 4800:4808/tcp
+    ufw delete allow 9600:9608/tcp
+    ufw delete allow 19200:19208/tcp
+    ufw delete allow 38400:38408/tcp
+    ufw delete allow 2000:2008/tcp
+    ufw delete allow 11520:11528/tcp
+  fi
 
   # This file may or may not exist
   if [ -e "${HOSTAPD_CONF_FILE}.hspt" ]; then
@@ -186,6 +231,9 @@ hotspot_off () {
 
   # Disable services to start after reboot
   systemctl disable hostapd isc-dhcp-server
+  if [ "$WCONSOLE" = true ]; then
+    systemctl disable ser2net
+  fi
 
   echo "WLAN Pi will now reboot"
   echo "classic" > $STATUS_FILE
