@@ -2,9 +2,11 @@
 #
 # hotspot_switcher       script to switch hotspot on/off
 
+# Change to true to enable wconsole functionality.
+WCONSOLE=false
+
 NAME="hotspot_switcher"
 DESC="Script to switch hotspot on/off"
-WCONSOLE=false
 STATUS_FILE="/etc/wlanpi-state"
 HOSTAPD_CONF_FILE="/etc/hostapd/hostapd.conf"
 HOTSPOT_CONF_FILE="/etc/wlanpi-hotspot/conf/hostapd.conf"

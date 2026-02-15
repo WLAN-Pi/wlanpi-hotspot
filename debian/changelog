@@ -1,3 +1,9 @@
+wlanpi-hotspot (1.0.20) unstable; urgency=medium
+
+  * Implemented wconsole functionality.
+
+ -- Jake Snyder <jsnyder81@gmail.com>  Mon, 16 Feb 2026 18:25:00 +0000
+
 wlanpi-hotspot (1.0.19) unstable; urgency=medium
 
   * Fixed: Mode switching fails due to missing directory /etc/hostapd
