@@ -9,6 +9,10 @@ systemctl unmask hostapd
 # stop & disable hostapd after installed
 # as not needed until we flip modes
 systemctl stop hostapd
+systemctl stop ser2net
+
 systemctl disable hostapd
+systemctl disable ser2net
+
 
 exit 0
