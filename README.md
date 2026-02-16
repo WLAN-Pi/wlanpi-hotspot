@@ -99,11 +99,38 @@ To switch out of "Hotspot" mode, SSH to the WLANPi using network address 172.16.
 
 When this command is executed, the original ("classic" mode) networking configuration files will be restored and the WLANPi will reboot. After the reboot, the WLANPi will operate as it did before the switch to "Hotspot" mode.
 
-## Contributing
+# Wi-Fi Console (wconsole) Integration
+
+The Hotspot switcher includes built-in support for **wconsole** functionality. This feature allows users to access serial console ports (via USB-to-Serial adapters connected to the WLAN Pi) over the Wi-Fi Hotspot network using `ser2net`.
+
+## How to Enable wconsole
+
+By default, the wconsole functionality is disabled in the `hotspot_switcher` script. To enable it:
+
+1.  Open the `hotspot_switcher` script (located at `/usr/sbin/hotspot_switcher` on the device or in the repository source).
+2.  Locate the `WCONSOLE` variable at the top of the script.
+3.  Change the value from `false` to `true`.
+
+```bash
+# Change to true to enable wconsole functionality.
+WCONSOLE=true
+```
+
+## What Happens When Enabled?
+
+When `WCONSOLE` is set to `true`:
+
+*   **Dependency Check**: The script checks if the `ser2net` service is installed.
+*   **Configuration**: It links the wconsole-specific `ser2net.conf` (from `/etc/wlanpi-wconsole/conf/ser2net.conf`) to `/etc/ser2net.conf`.
+*   **Firewall**: It opens specific TCP ports in the firewall (UFW) to allow incoming connections to the serial streams.
+    *   Ports allowed: 2400-2408, 4800-4808, 9600-9608, 19200-19208, 38400-38408, 11520-11528, 2000-2008.
+*   **Services**: The `ser2net` service is enabled to start on boot.
+
+# Contributing
 
 If you'd like to contribute to this project, please visit our ["Contributing Guidelines"](https://github.com/WLAN-Pi/.github/blob/6c505d84a8ec6d5004958fe2289659bcdd44118f/contributing.md) page.
 
-## Code of Conduct
+# Code of Conduct
 
 Please note the [Code of Conduct](https://github.com/WLAN-Pi/.github/blob/6c505d84a8ec6d5004958fe2289659bcdd44118f/code_of_conduct.md) guidelines that apply to activities within the WLAN Pi project. 
 
