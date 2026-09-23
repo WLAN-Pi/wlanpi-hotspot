@@ -15,7 +15,6 @@ fi
 set -e
 
 SSID=""
-PSK=""
 CHANNEL=
 CONFIG_FILE=/etc/wlanpi-hotspot/conf/hostapd.conf
 DHCP_FILE=/etc/wlanpi-hotspot/dhcp/dhcpd.conf

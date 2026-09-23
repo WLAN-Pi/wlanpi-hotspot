@@ -6,7 +6,6 @@
 WCONSOLE=false
 
 NAME="hotspot_switcher"
-DESC="Script to switch hotspot on/off"
 STATUS_FILE="/etc/wlanpi-state"
 HOSTAPD_CONF_FILE="/etc/hostapd/hostapd.conf"
 HOTSPOT_CONF_FILE="/etc/wlanpi-hotspot/conf/hostapd.conf"
