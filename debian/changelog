@@ -1,3 +1,12 @@
+wlanpi-hotspot (1.0.22) unstable; urgency=medium
+
+  * Move packaging to debhelper compat 13 and Standards-Version 4.7.0.
+    The built package contents and maintainer scripts are unchanged.
+  * Remove unused variables from hotspot_switcher and quickstart.sh
+    flagged by shellcheck. Behavior is unchanged.
+
+ -- Josh Schmelzle <josh@joshschmelzle.com>  Wed, 23 Sep 2026 19:51:54 -0400
+
 wlanpi-hotspot (1.0.21) unstable; urgency=medium
 
   * Rebuild to publish packages for Debian trixie to packagecloud
