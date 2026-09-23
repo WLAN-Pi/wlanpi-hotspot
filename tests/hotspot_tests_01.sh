@@ -59,7 +59,10 @@ info ()    { echo -n "(info) Test: $1" | tee -a $LOG_FILE;  }
 info_n ()  { echo "(info) Test: $1" | tee -a $LOG_FILE;  }
 comment () { echo $1 | tee -a $LOG_FILE; }
 
+# pass/fail take an optional message in $1 (see HOWTO below); no caller uses it yet.
+# shellcheck disable=SC2120
 pass ()    { inc_passed; echo " $1  (pass)" | tee -a $LOG_FILE; }
+# shellcheck disable=SC2120
 fail ()    { inc_failed; echo " $1  (fail) <--- !!!!!!" | tee -a $LOG_FILE; }
 
 check ()     { if [[ $1 ]];   then pass; else fail; fi; }
@@ -104,7 +107,7 @@ run_tests () {
 
   # check what state the WLAN Pi is in
   info "Checking current mode is hotspot"
-  check `cat $STATUS_FILE | grep 'hotspot'`
+  check "$(cat $STATUS_FILE | grep 'hotspot')"
 
   # check we have directories expected
   dir_exists "/etc/wlanpi-hotspot"
@@ -137,28 +140,28 @@ run_tests () {
 
   # check default SSID configured
   info "Checking hostapd SSID is default"
-  check `cat /etc/hostapd.conf | grep ssid="${SSID}"`  
+  check "$(cat /etc/hostapd.conf | grep ssid="${SSID}")"
   
   # check wlan port is in correct state (Mode:Master)
   info "Checking wlan adapter in master mode"
-  check `iwconfig wlan0 | grep 'Mode:Master'`
+  check "$(iwconfig wlan0 | grep 'Mode:Master')"
 
   # check wlan broadcasting correct SSID
   info "Checking wlan adapter broadcasting correct SSID ($SSID)"
-  check `iwconfig wlan0 | grep ESSID:\"${SSID}\"`
+  check "$(iwconfig wlan0 | grep ESSID:\"${SSID}\")"
 
   # check wlan0 up and running with correct IP address
   wlan0_ip=172.16.43.1
   info "Checking wlan0 has correct IP (${wlan0_ip})"
-  check `ifconfig wlan0 | grep $wlan0_ip`
+  check "$(ifconfig wlan0 | grep $wlan0_ip)"
 
   # check forwarding enabled
   info "Checking firewall forwarding enabled"
-  check `cat /etc/default/ufw | grep 'DEFAULT_FORWARD_POLICY="ACCEPT"'`
+  check "$(cat /etc/default/ufw | grep 'DEFAULT_FORWARD_POLICY="ACCEPT"')"
 
   # check NAT enabled - check for line from NAT config
   info "Checking firewall NAT enabled"
-  check `cat /etc/ufw/before.rules | grep 'POSTROUTING -s 172.16.43.0/24 -o eth0 -j MASQUERADE'`
+  check "$(cat /etc/ufw/before.rules | grep 'POSTROUTING -s 172.16.43.0/24 -o eth0 -j MASQUERADE')"
 
   # Print test run results summary
   summary
@@ -201,7 +204,7 @@ esac
 # should never reach here, but just in case....
 exit 1
 
-<< 'HOWTO'
+: << 'HOWTO'
 
 #################################################################################################################
 
