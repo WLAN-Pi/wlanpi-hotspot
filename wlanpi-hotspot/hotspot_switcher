@@ -21,9 +21,10 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 require_enabled_channel () {
-  local channel hw_mode
+  local channel hw_mode iface phy
   channel=$(sed -n 's/^[[:space:]]*channel=//p' "$HOTSPOT_CONF_FILE" | head -n 1)
   hw_mode=$(sed -n 's/^[[:space:]]*hw_mode=//p' "$HOTSPOT_CONF_FILE" | head -n 1)
+  iface=$(sed -n 's/^[[:space:]]*interface=//p' "$HOTSPOT_CONF_FILE" | head -n 1)
   if ! [[ "$channel" =~ ^[0-9]+$ ]]; then
     echo "Failed: no usable channel in $HOTSPOT_CONF_FILE"
     exit 1
@@ -35,7 +36,14 @@ require_enabled_channel () {
       exit 1
       ;;
   esac
-  if ! iw phy | awk -v channel="$channel" -v hw_mode="$hw_mode" '
+  if [[ "$iface" =~ ^[A-Za-z0-9._-]+$ ]] && [[ -r "/sys/class/net/${iface}/phy80211/name" ]]; then
+    phy=$(tr -d '[:space:]' < "/sys/class/net/${iface}/phy80211/name")
+  fi
+  if [[ ! "$phy" =~ ^phy[0-9]+$ ]]; then
+    echo "Failed: channel ${channel} can't be used for AP mode on this adapter"
+    exit 1
+  fi
+  if ! iw phy "$phy" info | awk -v channel="$channel" -v hw_mode="$hw_mode" '
     $3 == "MHz" && $4 == "[" channel "]" {
       mhz = $2 + 0
       if (hw_mode == "g" && (mhz < 2400 || mhz >= 2500)) next
@@ -95,7 +103,7 @@ hotspot_on () {
 
   # check if we are using the factory shipped SSID, rename if we are
   echo "Checking for factory default SSID name"
-  if grep -q -E "^?ssid=WLAN Pi Default SSID" "$HOTSPOT_CONF_FILE" && { [ ! -f "$WCONSOLE_CONF_FILE" ] || grep -q -E "^?ssid=WLAN Pi Default SSID" "$WCONSOLE_CONF_FILE"; }; then
+  if grep -q -E "^#?ssid=WLAN Pi Default SSID" "$HOTSPOT_CONF_FILE" && { [ ! -f "$WCONSOLE_CONF_FILE" ] || grep -q -E "^#?ssid=WLAN Pi Default SSID" "$WCONSOLE_CONF_FILE"; }; then
     echo "Creating a unique SSID as using default SSID"
 
     # Get the last 3 chars of eth0 MAC address
@@ -120,7 +128,7 @@ hotspot_on () {
 
   # check if we are using the factory shipped WPA2 passphrase, re-gen if we are
   echo "Checking for factory default WPA2 passphrase"
-  if grep -q -E "^?wpa_passphrase=WL@NP123" "$HOTSPOT_CONF_FILE" && { [ ! -f "$WCONSOLE_CONF_FILE" ] || grep -q -E "^?wpa_passphrase=WL@NP123" "$WCONSOLE_CONF_FILE"; }; then
+  if grep -q -E "^#?wpa_passphrase=WL@NP123" "$HOTSPOT_CONF_FILE" && { [ ! -f "$WCONSOLE_CONF_FILE" ] || grep -q -E "^#?wpa_passphrase=WL@NP123" "$WCONSOLE_CONF_FILE"; }; then
     echo "Generating a new random WPA2 passphrase"
     PASSPHRASE=$(tr -dc 'A-Ha-h2-9J-Kj-k2-9M-Nm-n2-9P-Zp-z2-9' </dev/urandom | head -c 12  ; echo)
 

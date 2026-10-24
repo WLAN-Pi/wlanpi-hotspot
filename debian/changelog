@@ -1,14 +1,15 @@
 wlanpi-hotspot (1.0.23) unstable; urgency=medium
 
-  * Give wlan0 172.16.43.1/24 with systemd-networkd. Trixie has no
-    ifupdown, so the interfaces file never configured the AP and
-    isc-dhcp-server had no subnet.
+  * Give wlan0 172.16.43.1/24 with systemd-networkd even when the AP
+    link has no carrier. Trixie has no ifupdown, so the interfaces file
+    never configured the AP and isc-dhcp-server had no subnet.
   * Set net.ipv4.ip_forward from a sysctl.d drop-in. systemd-sysctl on
     trixie does not read /etc/sysctl.conf.
   * Randomize the factory SSID and passphrase when wlanpi-wconsole is
     not installed.
   * Refuse to start the hotspot unless the channel is usable for AP
-    mode on the hw_mode band. Disabled and no-IR channels are refused.
+    mode on the hotspot radio's hw_mode band. Disabled and no-IR
+    channels are refused.
   * Drop the obsolete interfaces and sysctl.conf conffiles on upgrade
     from versions before 1.0.23.
 
