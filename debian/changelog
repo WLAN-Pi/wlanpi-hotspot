@@ -7,8 +7,10 @@ wlanpi-hotspot (1.0.23) unstable; urgency=medium
     trixie does not read /etc/sysctl.conf.
   * Randomize the factory SSID and passphrase when wlanpi-wconsole is
     not installed.
-  * Refuse to start the hotspot when the configured channel is disabled
-    on the adapter.
+  * Refuse to start the hotspot unless the channel is usable for AP
+    mode on the hw_mode band. Disabled and no-IR channels are refused.
+  * Drop the obsolete interfaces and sysctl.conf conffiles on upgrade
+    from versions before 1.0.23.
 
  -- jsz <josh@joshschmelzle.com>  Sat, 24 Oct 2026 10:40:00 -0400
 

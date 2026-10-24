@@ -21,17 +21,31 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 require_enabled_channel () {
-  local channel
+  local channel hw_mode
   channel=$(sed -n 's/^[[:space:]]*channel=//p' "$HOTSPOT_CONF_FILE" | head -n 1)
+  hw_mode=$(sed -n 's/^[[:space:]]*hw_mode=//p' "$HOTSPOT_CONF_FILE" | head -n 1)
   if ! [[ "$channel" =~ ^[0-9]+$ ]]; then
     echo "Failed: no usable channel in $HOTSPOT_CONF_FILE"
     exit 1
   fi
-  if ! iw phy | awk -v channel="$channel" '
-    /MHz \[/ && $0 ~ "\\[" channel "\\]" && $0 !~ /\(disabled\)/ { ok = 1 }
+  case "$hw_mode" in
+    g|a) ;;
+    *)
+      echo "Failed: channel ${channel} can't be used for AP mode on this adapter"
+      exit 1
+      ;;
+  esac
+  if ! iw phy | awk -v channel="$channel" -v hw_mode="$hw_mode" '
+    $3 == "MHz" && $4 == "[" channel "]" {
+      mhz = $2 + 0
+      if (hw_mode == "g" && (mhz < 2400 || mhz >= 2500)) next
+      if (hw_mode == "a" && (mhz < 5000 || mhz >= 5925)) next
+      if ($0 ~ /\(disabled\)/ || $0 ~ /no IR/) next
+      ok = 1
+    }
     END { exit (ok ? 0 : 1) }
   '; then
-    echo "Failed: channel ${channel} is not an enabled channel for this adapter"
+    echo "Failed: channel ${channel} can't be used for AP mode on this adapter"
     exit 1
   fi
 }

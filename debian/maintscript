@@ -1,0 +1,2 @@
+rm_conffile /etc/wlanpi-hotspot/network/interfaces 1.0.23~
+rm_conffile /etc/wlanpi-hotspot/sysctl/sysctl.conf 1.0.23~
