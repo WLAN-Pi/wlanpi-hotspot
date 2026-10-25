@@ -19,7 +19,7 @@ CHANNEL=
 CONFIG_FILE=/etc/wlanpi-hotspot/conf/hostapd.conf
 DHCP_FILE=/etc/wlanpi-hotspot/dhcp/dhcpd.conf
 ISC_DHCP_FILE=/etc/wlanpi-hotspot/default/isc-dhcp-server
-INTERFACES_FILE=/etc/wlanpi-hotspot/network/interfaces
+NETWORK_FILE=/etc/wlanpi-hotspot/network/10-wlanpi-hotspot-wlan0.network
 
 STATUS_FILE="/etc/wlanpi-state"
 
@@ -173,9 +173,7 @@ SEC
     # isc-dhcp-server config
     sed -i "s/^INTERFACESv4=.*$/INTERFACESv4=\"$INTERFACE\"/" $ISC_DHCP_FILE
 
-    # interfaces config file
-    sed -i "s/^iface wlan.*$/iface $INTERFACE inet static/" $INTERFACES_FILE
-    sed -i "s/^allow-hotplug wlan.*$/allow-hotplug $INTERFACE/" $INTERFACES_FILE
+    sed -i "s/^Name=.*/Name=$INTERFACE/" $NETWORK_FILE
     
     echo "Wireless link configured."
     sleep 1

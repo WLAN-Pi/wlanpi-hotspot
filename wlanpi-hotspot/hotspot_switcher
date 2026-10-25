@@ -10,11 +10,53 @@ STATUS_FILE="/etc/wlanpi-state"
 HOSTAPD_CONF_FILE="/etc/hostapd/hostapd.conf"
 HOTSPOT_CONF_FILE="/etc/wlanpi-hotspot/conf/hostapd.conf"
 WCONSOLE_CONF_FILE="/etc/wlanpi-wconsole/conf/hostapd.conf"
+WLAN_NETWORK_SRC="/etc/wlanpi-hotspot/network/10-wlanpi-hotspot-wlan0.network"
+WLAN_NETWORK_FILE="/etc/systemd/network/10-wlanpi-hotspot-wlan0.network"
+FORWARD_SYSCTL_SRC="/etc/wlanpi-hotspot/sysctl/99-wlanpi-hotspot.conf"
+FORWARD_SYSCTL_FILE="/etc/sysctl.d/99-wlanpi-hotspot.conf"
 
 if [[ $EUID -ne 0 ]]; then
    echo "Error: This script must be run as root"
    exit 1
 fi
+
+require_enabled_channel () {
+  local channel hw_mode iface phy
+  channel=$(sed -n 's/^[[:space:]]*channel=//p' "$HOTSPOT_CONF_FILE" | head -n 1)
+  hw_mode=$(sed -n 's/^[[:space:]]*hw_mode=//p' "$HOTSPOT_CONF_FILE" | head -n 1)
+  iface=$(sed -n 's/^[[:space:]]*interface=//p' "$HOTSPOT_CONF_FILE" | head -n 1)
+  if ! [[ "$channel" =~ ^[0-9]+$ ]]; then
+    echo "Failed: no usable channel in $HOTSPOT_CONF_FILE"
+    exit 1
+  fi
+  case "$hw_mode" in
+    g|a) ;;
+    *)
+      echo "Failed: channel ${channel} can't be used for AP mode on this adapter"
+      exit 1
+      ;;
+  esac
+  if [[ "$iface" =~ ^[A-Za-z0-9._-]+$ ]] && [[ -r "/sys/class/net/${iface}/phy80211/name" ]]; then
+    phy=$(tr -d '[:space:]' < "/sys/class/net/${iface}/phy80211/name")
+  fi
+  if [[ ! "$phy" =~ ^phy[0-9]+$ ]]; then
+    echo "Failed: channel ${channel} can't be used for AP mode on this adapter"
+    exit 1
+  fi
+  if ! iw phy "$phy" info | awk -v channel="$channel" -v hw_mode="$hw_mode" '
+    $3 == "MHz" && $4 == "[" channel "]" {
+      mhz = $2 + 0
+      if (hw_mode == "g" && (mhz < 2400 || mhz >= 2500)) next
+      if (hw_mode == "a" && (mhz < 5000 || mhz >= 5925)) next
+      if ($0 ~ /\(disabled\)/ || $0 ~ /no IR/) next
+      ok = 1
+    }
+    END { exit (ok ? 0 : 1) }
+  '; then
+    echo "Failed: channel ${channel} can't be used for AP mode on this adapter"
+    exit 1
+  fi
+}
 
 ###############################################################################
 #
@@ -57,9 +99,11 @@ hotspot_on () {
      exit 1
   fi
 
+  require_enabled_channel
+
   # check if we are using the factory shipped SSID, rename if we are
   echo "Checking for factory default SSID name"
-  if grep -q -E "^?ssid=WLAN Pi Default SSID" $HOTSPOT_CONF_FILE && grep -q -E "^?ssid=WLAN Pi Default SSID" $WCONSOLE_CONF_FILE; then
+  if grep -q -E "^#?ssid=WLAN Pi Default SSID" "$HOTSPOT_CONF_FILE" && { [ ! -f "$WCONSOLE_CONF_FILE" ] || grep -q -E "^#?ssid=WLAN Pi Default SSID" "$WCONSOLE_CONF_FILE"; }; then
     echo "Creating a unique SSID as using default SSID"
 
     # Get the last 3 chars of eth0 MAC address
@@ -73,8 +117,10 @@ hotspot_on () {
 
     # Configure the unique SSID
     echo "Applying new SSID: WLAN Pi <last 3 chars of eth0 MAC>"
-    sed -i "s/^#\?ssid=.*/ssid=WLAN Pi $LAST_3_CHARS_MAC/" $HOTSPOT_CONF_FILE
-    sed -i "s/^#\?ssid=.*/ssid=WLAN Pi $LAST_3_CHARS_MAC/" $WCONSOLE_CONF_FILE
+    sed -i "s/^#\?ssid=.*/ssid=WLAN Pi $LAST_3_CHARS_MAC/" "$HOTSPOT_CONF_FILE"
+    if [ -f "$WCONSOLE_CONF_FILE" ]; then
+      sed -i "s/^#\?ssid=.*/ssid=WLAN Pi $LAST_3_CHARS_MAC/" "$WCONSOLE_CONF_FILE"
+    fi
 
   else
     echo "SSID is already customised"
@@ -82,14 +128,16 @@ hotspot_on () {
 
   # check if we are using the factory shipped WPA2 passphrase, re-gen if we are
   echo "Checking for factory default WPA2 passphrase"
-  if grep -q -E "^?wpa_passphrase=WL@NP123" $HOTSPOT_CONF_FILE && grep -q -E "^?wpa_passphrase=WL@NP123" $WCONSOLE_CONF_FILE; then
+  if grep -q -E "^#?wpa_passphrase=WL@NP123" "$HOTSPOT_CONF_FILE" && { [ ! -f "$WCONSOLE_CONF_FILE" ] || grep -q -E "^#?wpa_passphrase=WL@NP123" "$WCONSOLE_CONF_FILE"; }; then
     echo "Generating a new random WPA2 passphrase"
     PASSPHRASE=$(tr -dc 'A-Ha-h2-9J-Kj-k2-9M-Nm-n2-9P-Zp-z2-9' </dev/urandom | head -c 12  ; echo)
 
     # substitute in new random pwd
     echo "Applying randomised passphrase to hotspot and wconsole SSID"
-    sed -i "s/^#\?wpa_passphrase=.*/wpa_passphrase=$PASSPHRASE/" $HOTSPOT_CONF_FILE
-    sed -i "s/^#\?wpa_passphrase=.*/wpa_passphrase=$PASSPHRASE/" $WCONSOLE_CONF_FILE
+    sed -i "s/^#\?wpa_passphrase=.*/wpa_passphrase=$PASSPHRASE/" "$HOTSPOT_CONF_FILE"
+    if [ -f "$WCONSOLE_CONF_FILE" ]; then
+      sed -i "s/^#\?wpa_passphrase=.*/wpa_passphrase=$PASSPHRASE/" "$WCONSOLE_CONF_FILE"
+    fi
 
   else
     echo "WPA2 passphrase is already customised"
@@ -100,8 +148,6 @@ hotspot_on () {
   echo "Backing up existing config files ..."
   cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.hspt
   cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.hspt
-  cp /etc/network/interfaces /etc/network/interfaces.hspt
-  cp /etc/sysctl.conf /etc/sysctl.conf.hspt
   cp /etc/default/ufw /etc/default/ufw.hspt
   cp /etc/ufw/before.rules /etc/ufw/before.rules.hspt
   if [ "$WCONSOLE" = true ] && [ -e /etc/ser2net.conf ]; then
@@ -115,8 +161,6 @@ hotspot_on () {
   echo "Removing existing config files ..."
   rm /etc/default/isc-dhcp-server
   rm /etc/dhcp/dhcpd.conf
-  rm /etc/network/interfaces
-  rm /etc/sysctl.conf
   rm /etc/default/ufw
   rm /etc/ufw/before.rules
   if [ "$WCONSOLE" = true ] && [ -e /etc/ser2net.conf ]; then
@@ -137,11 +181,14 @@ hotspot_on () {
   echo "Creating links to config files ..."
   ln -s /etc/wlanpi-hotspot/default/isc-dhcp-server /etc/default/isc-dhcp-server
   ln -s /etc/wlanpi-hotspot/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf
-  ln -s /etc/wlanpi-hotspot/network/interfaces /etc/network/interfaces
-  ln -s $HOTSPOT_CONF_FILE $HOSTAPD_CONF_FILE
-  ln -s /etc/wlanpi-hotspot/sysctl/sysctl.conf /etc/sysctl.conf
+  ln -s "$HOTSPOT_CONF_FILE" "$HOSTAPD_CONF_FILE"
   ln -s /etc/wlanpi-hotspot/default/ufw /etc/default/ufw
   ln -s /etc/wlanpi-hotspot/ufw/before.rules /etc/ufw/before.rules
+  mkdir -p /etc/systemd/network /etc/sysctl.d
+  ln -sfn "$WLAN_NETWORK_SRC" "$WLAN_NETWORK_FILE"
+  ln -sfn "$FORWARD_SYSCTL_SRC" "$FORWARD_SYSCTL_FILE"
+  systemctl restart systemd-sysctl
+  networkctl reload
   if [ "$WCONSOLE" = true ]; then
     ln -s /etc/wlanpi-wconsole/conf/ser2net.conf /etc/ser2net.conf
     # Open up console ports on FW
@@ -195,11 +242,25 @@ hotspot_off () {
   echo "Removing links to config files ..."
   unlink /etc/default/isc-dhcp-server
   unlink /etc/dhcp/dhcpd.conf
-  unlink /etc/network/interfaces
-  unlink $HOSTAPD_CONF_FILE
-  unlink /etc/sysctl.conf
+  unlink "$HOSTAPD_CONF_FILE"
   unlink /etc/default/ufw
   unlink /etc/ufw/before.rules
+  unlink "$WLAN_NETWORK_FILE"
+  unlink "$FORWARD_SYSCTL_FILE"
+  if [ -L /etc/network/interfaces ]; then
+    unlink /etc/network/interfaces
+  fi
+  if [ -f /etc/network/interfaces.hspt ]; then
+    cp /etc/network/interfaces.hspt /etc/network/interfaces
+  fi
+  if [ -L /etc/sysctl.conf ]; then
+    unlink /etc/sysctl.conf
+  fi
+  if [ -f /etc/sysctl.conf.hspt ]; then
+    cp /etc/sysctl.conf.hspt /etc/sysctl.conf
+  fi
+  systemctl restart systemd-sysctl
+  networkctl reload
   if [ "$WCONSOLE" = true ]; then
     unlink /etc/ser2net.conf
   fi
@@ -208,8 +269,6 @@ hotspot_off () {
   echo "Restoring original config files ..."
   cp /etc/default/isc-dhcp-server.hspt /etc/default/isc-dhcp-server
   cp /etc/dhcp/dhcpd.conf.hspt /etc/dhcp/dhcpd.conf
-  cp /etc/network/interfaces.hspt /etc/network/interfaces
-  cp /etc/sysctl.conf.hspt /etc/sysctl.conf
   cp /etc/default/ufw.hspt /etc/default/ufw
   cp /etc/ufw/before.rules.hspt /etc/ufw/before.rules
   if [ "$WCONSOLE" = true ]; then
